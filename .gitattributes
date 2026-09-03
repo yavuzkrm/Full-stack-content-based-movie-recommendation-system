@@ -1,2 +1,2 @@
-*.html linguist
-**/*.html linguist
+static/* linguist-vendored
+assets/* linguist-vendored
