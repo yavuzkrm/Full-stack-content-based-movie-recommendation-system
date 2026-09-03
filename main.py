@@ -347,4 +347,6 @@ if __name__ == "__main__":
         except Exception as e:
             print(f"Could not warm up the recommendation engine (will retry on first search): {e}")
 
-    app.run(debug=True, port=5000)
+    port = int(os.environ.get("PORT", 5000))
+    debug_mode = os.environ.get("FLASK_DEBUG", "True").lower() == "true"
+    app.run(host="0.0.0.0", port=port, debug=debug_mode)
