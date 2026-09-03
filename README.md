@@ -1,0 +1,134 @@
+# NextWatch — Movie Recommendation Engine
+
+A full-stack movie recommendation site built with Flask, MySQL, and a
+content-based recommendation model. Search for a movie you like — or a
+handful of them at once — and get back a ranked list of similar titles, with
+genres, cast, director and posters pulled from [TMDB](https://www.themoviedb.org/).
+
+## Features
+
+- **Single or multi-movie recommendations** — search one title, or pick 2–5
+  movies to blend into a single set of suggestions.
+- **Search-as-you-type**, with results ranked so titles that *start with*
+  your query show up before ones that just happen to contain it somewhere.
+- **Accounts** with favourites (max 5), a watchlist, a "watched" list, and
+  1–10 star ratings — all editable straight from any movie card or its detail
+  view.
+- **Trending Today** row, refreshed automatically once a day from TMDB.
+- A four-signal hybrid recommendation model — see below.
+
+## How recommendations work
+
+Rather than gluing genres, overview, cast and director into one block of text
+and running a single similarity comparison over it, the engine computes four
+**separate** similarity signals and blends them together with its own
+weights (see `TEXT_WEIGHT` / `KEYWORD_WEIGHT` / `GENRE_WEIGHT` /
+`PEOPLE_WEIGHT` at the top of `recommend/engine.py`):
+
+1. **Text** — TF-IDF + cosine similarity on the movie's overview/plot.
+2. **Keywords** — TF-IDF + cosine similarity on TMDB's keyword tags (e.g.
+   "time travel", "unreliable narrator") — much more specific than a broad
+   genre, and the closest thing this project has to Letterboxd's
+   review-mined "similar films" theming.
+3. **Genre** — TF-IDF + cosine similarity on genre tags.
+4. **People** — TF-IDF + cosine similarity on director + cast names.
+
+Once a shortlist of the most similar movies is built this way, it's re-ranked
+one more time by a Bayesian "weighted rating" (an IMDb-style adjustment that
+keeps a movie with 5 near-perfect votes from outranking one with 50,000
+slightly-lower votes) — but only as a tie-breaker *within* that already-
+relevant shortlist, never as a way to let an unrelated but popular movie
+crowd out a genuinely similar one.
+
+## Tech stack
+
+| Layer          | What's used |
+|----------------|-------------|
+| Backend        | Python, Flask |
+| Database       | MySQL |
+| Recommendation | pandas, scikit-learn (TF-IDF + cosine similarity) |
+| Frontend       | Plain HTML/CSS/JavaScript — no framework, no build step |
+| Data source    | [TMDB API](https://www.themoviedb.org/documentation/api) |
+
+## Project structure
+
+```
+.
+├── main.py                        # Flask app — all /api/... routes live here
+├── config.py                      # loads .env, sets up the DB connection pool
+├── requirements.txt
+├── db/
+│   └── schema.sql                 # run this once to create the database & tables
+├── data/
+│   ├── fetch_movies.py            # one-time/occasional bulk import from TMDB
+│   └── fetch_daily_popular_movies.py  # keeps the "Trending Today" row fresh
+├── recommend/
+│   └── engine.py                  # the actual recommendation model
+├── user/
+│   └── auth.py                    # accounts, favourites, watchlist, watched, ratings
+├── static/
+│   └── images/                    # logo + favicon, served automatically by Flask
+└── templates/
+    └── index.html                 # the entire frontend (HTML + CSS + JS in one file)
+```
+
+## Getting started
+
+**1. Clone the repo and install dependencies**
+
+```bash
+git clone <this repo>
+cd <this repo>
+python -m venv .venv
+source .venv/bin/activate      # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+**2. Set up your environment variables**
+
+```bash
+cp .env.example .env
+```
+
+Then open `.env` and fill in a [TMDB API key](https://www.themoviedb.org/settings/api)
+and your MySQL connection details.
+
+**3. Create the database**
+
+Make sure MySQL is running, then:
+
+```bash
+mysql -u root -p < db/schema.sql
+```
+
+**4. Import a movie catalogue from TMDB**
+
+This fetches genres, keywords, and several thousand movies (with cast/director
+info) and can take a while — TMDB rate limits mean the script deliberately
+pauses between requests.
+
+```bash
+python -m data.fetch_movies
+```
+
+**5. Run the app**
+
+```bash
+python main.py
+```
+
+Then open **http://localhost:5000** in your browser. The first launch prints
+a short "warming up the recommendation engine" message while it builds the
+similarity model — that's normal, and only happens once per server start.
+
+## Notes
+
+- The recommendation model, the search index, and the "Trending Today" cache
+  all live in memory and are rebuilt when the server restarts — there's
+  nothing to keep in sync by hand.
+- `data/fetch_daily_popular_movies.py` is also wired into a background job
+  (started automatically by `main.py`) that refreshes the trending list every
+  24 hours without needing a cron job or manual re-run.
+- If a signal has no data yet (e.g. you haven't run the keyword-fetching step
+  for older movies), the engine doesn't crash — that one signal just quietly
+  contributes nothing until real data is there.

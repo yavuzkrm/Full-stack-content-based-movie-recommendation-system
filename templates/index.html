@@ -1,0 +1,2006 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NextWatch — Movie Recommendations</title>
+<meta name="description" content="NextWatch — discover your next favourite movie with a hybrid recommendation engine built on content, cast, and ratings.">
+<link rel="icon" type="image/png" sizes="32x32" href="/static/images/favicon-32.png">
+<link rel="icon" type="image/png" sizes="64x64" href="/static/images/favicon-64.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/static/images/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0a0a0d;
+    --surface: #16161c;
+    --surface-2: #1f1f28;
+    --line: #2a2a35;
+    --text: #f2f0e9;
+    --text-dim: #8f8d99;
+    --accent: #14b8a6;
+    --accent-dim: #0d6d63;
+    --red: #e63950;
+    --green: #3dc87a;
+    --violet: #8a6af0;
+    --radius: 10px;
+  }
+  *{ box-sizing: border-box; }
+  html{ scroll-behavior: smooth; height:100%; }
+  body{
+    margin:0;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    position:relative;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Sora', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  body::before{
+    content:"";
+    position:fixed;
+    inset:0;
+    z-index:-1;
+    background: radial-gradient(circle at 20% -10%, #1a1a22 0%, var(--bg) 45%);
+    pointer-events:none;
+  }
+  h1,h2,h3,.display{
+    font-family: 'Bebas Neue', sans-serif;
+    letter-spacing: 0.04em;
+    font-weight: 400;
+  }
+
+  /* --- decorative filmstrip motif --- */
+  .filmstrip{
+    height: 14px;
+    background:
+      repeating-linear-gradient(90deg, var(--accent) 0 6px, transparent 6px 22px);
+    opacity: 0.35;
+    margin: 0;
+  }
+
+  header{
+    display:flex; align-items:center; justify-content:center;
+    padding: 0 5vw;
+    position: sticky; top:0; z-index: 50;
+    background: rgba(10,10,13,0.85);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+  }
+  .header-inner{
+    width:100%; max-width: 1180px;
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 20px 0;
+  }
+  .logo{
+    display:flex; align-items:center; cursor:pointer;
+  }
+  .logo img{ height: 34px; width:auto; display:block; }
+  #auth-area{ display:flex; gap:10px; align-items:center; font-size: 14px; position: relative; }
+  button, .btn{
+    font-family:'Sora',sans-serif; cursor:pointer; border:none; border-radius: var(--radius);
+    padding: 10px 18px; font-size: 14px; font-weight:600; transition: transform .15s ease, background .15s ease;
+  }
+  .btn:active{ transform: scale(0.97); }
+  .btn-accent{ background: var(--accent); color:#062420; }
+  .btn-accent:hover{ background:#2dd4bf; }
+  .btn-ghost{ background: transparent; color: var(--text); border: 1px solid var(--line); }
+  .btn-ghost:hover{ border-color: var(--accent); color: var(--accent); }
+  .btn-sm{ padding: 6px 12px; font-size: 12px; }
+
+  main{ max-width: 1180px; margin: 0 auto; padding: 0 5vw 80px; width:100%; flex:1 0 auto; }
+
+  /* --- hero --- */
+  .hero{
+    padding: 64px 0 44px;
+    display:flex; flex-direction:column; align-items:center; text-align:center; gap:14px;
+  }
+  .eyebrow{ color: var(--accent); font-size:13px; letter-spacing:0.2em; text-transform:uppercase; }
+  .hero h1{ font-size: clamp(40px, 7vw, 84px); margin:0; line-height: 0.95; }
+  .hero p{ color: var(--text-dim); max-width: 480px; margin:0; font-size:15px; }
+
+  /* --- section headers --- */
+  .section{ padding: 46px 0; border-top: 1px solid var(--line); }
+  .section-head{ display:flex; align-items:baseline; justify-content:space-between; margin-bottom: 22px; gap: 16px; flex-wrap: wrap; }
+  .section-head h2{ font-size: 34px; margin:0; color: var(--text); }
+  .section-head .num{ color: var(--accent); }
+  .section-sub{ color: var(--text-dim); font-size: 13px; margin-top: 4px; }
+
+  /* --- popular strip --- */
+  .row-scroll{
+    display:flex; gap:16px; overflow-x:auto; overflow-y:visible; padding: 24px 26px 30px; scroll-snap-type: x mandatory;
+  }
+  .row-scroll::-webkit-scrollbar{ height:6px; }
+  .row-scroll::-webkit-scrollbar-thumb{ background: var(--line); border-radius:4px; }
+
+  /* ═══ CARD — grows on hover, opens the detail view when clicked ═══ */
+  .card{
+    background: var(--surface); border:1px solid var(--line); border-radius: var(--radius);
+    overflow:hidden; flex: 0 0 170px; scroll-snap-align:start; position:relative;
+    transition: transform .28s cubic-bezier(.25,.9,.35,1.25), border-color .2s ease, box-shadow .28s ease, z-index 0s;
+    cursor: pointer;
+    will-change: transform;
+  }
+  .results-grid .card{ flex: none; width: 100%; }
+  .card:hover{
+    border-color: var(--accent-dim);
+    transform: translateY(-6px) scale(1.08);
+    z-index: 5;
+    box-shadow: 0 24px 50px -12px rgba(0,0,0,.7), 0 0 0 1px rgba(20,184,166,.15);
+  }
+  .card .poster{ width:100%; aspect-ratio:2/3; object-fit:cover; background: var(--surface-2); display:block; }
+  /* User-rating badge — same compact design at EVERY poster size (small card, rec-card,
+     detail modal). Only shows "★ 9" — the full text ("Your rating: 9/10") lives in the
+     tooltip, so it never overflows on narrow posters. */
+  .user-rating-badge{
+    position:absolute; top:8px; left:8px; z-index:2;
+    display:inline-flex; align-items:center; gap:3px;
+    background: var(--accent); color:#062420;
+    font-size:11px; font-weight:800;
+    padding: 4px 9px; border-radius: 999px;
+    box-shadow: 0 4px 10px rgba(0,0,0,.45);
+  }
+  .user-rating-badge::before{ content:"★"; font-size:9px; }
+  .card .body{ padding:10px 12px 4px; }
+  .card .title{
+    font-size:14px; font-weight:600; line-height:1.25; margin:0 0 4px;
+    min-height: 35px;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .card .rating{ font-size:12px; color: var(--accent); font-weight:600; }
+
+  /* hover only triggers the grow effect — the overview text no longer shows on hover, only inside the detail modal on click */
+  .genre-tag{
+    font-size:9px; letter-spacing:.03em; text-transform:uppercase; font-weight:700;
+    background: rgba(20,184,166,.08); color: var(--accent); border:1px solid rgba(20,184,166,.2);
+    padding: 2px 7px; border-radius: 20px;
+  }
+
+  .card .actions{ display:flex; gap:6px; padding: 6px 12px 12px; }
+  .icon-btn{
+    width:30px; height:30px; border-radius:50%; border:1px solid var(--line); background: var(--surface-2);
+    color: var(--text-dim); display:flex; align-items:center; justify-content:center; font-size:13px; cursor:pointer;
+    transition: all .15s ease;
+  }
+  .icon-btn:hover{ border-color: var(--accent); color: var(--accent); transform: scale(1.1); }
+  .icon-btn.active{ background: var(--accent); color:#062420; border-color: var(--accent); }
+  .card-hint{
+    font-size:9px; color: var(--text-dim); text-align:center; letter-spacing:.05em;
+    text-transform:uppercase; padding: 0 0 8px; opacity:0; transition: opacity .2s ease;
+  }
+  .card:hover .card-hint{ opacity:.6; }
+
+  .results-grid{
+    display:grid; grid-template-columns: repeat(auto-fill, minmax(170px,1fr)); gap: 26px 18px;
+    align-content:start; min-height: 260px;
+  }
+  .empty-note{ color: var(--text-dim); font-size:14px; padding: 20px 0; }
+
+  /* --- skeleton loading cards ---
+     Shown in place of real movie cards while a request is in flight, instead of a plain
+     "Loading..." line. This is the same trick sites like Netflix and Letterboxd use: showing
+     the SHAPE of the content that is about to arrive makes the wait feel shorter and the page
+     feel more "alive" than a static loading message, even though the actual load time is
+     identical either way. */
+  @keyframes skeleton-shimmer {
+    0%   { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+  .skeleton-card{
+    flex: 0 0 170px; border-radius: var(--radius); overflow:hidden;
+    background: var(--surface); border:1px solid var(--line);
+  }
+  .results-grid .skeleton-card{ flex:none; width:100%; }
+  .skeleton-poster{
+    width:100%; aspect-ratio:2/3;
+    background: linear-gradient(100deg, var(--surface-2) 30%, #2a2a35 50%, var(--surface-2) 70%);
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.4s ease-in-out infinite;
+  }
+  .skeleton-lines{ padding: 10px 12px; display:flex; flex-direction:column; gap:8px; }
+  .skeleton-line{
+    height:10px; border-radius:4px;
+    background: linear-gradient(100deg, var(--surface-2) 30%, #2a2a35 50%, var(--surface-2) 70%);
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.4s ease-in-out infinite;
+  }
+  .skeleton-line.short{ width: 55%; }
+
+  /* --- results-page toolbar (re-run recommendations) --- */
+  .results-toolbar{
+    display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;
+    margin: 22px 0 20px;
+  }
+  .results-toolbar .section-sub{ margin:0; }
+
+  /* --- plain search bar at the top of the results page (outer card/border removed) ---
+     Note: we deliberately use two classes together, .search-panel.rec-search-panel, so this
+     rule's specificity is always strictly higher than the base single-class .search-panel
+     rule — that way it always wins regardless of where either rule sits in the file. */
+  .search-panel.rec-search-panel{
+    max-width: 640px; margin: 0 auto 26px; padding: 0;
+    background: none; border: none; box-shadow: none; border-radius: 0;
+  }
+
+  /* --- detailed list card (rec-card), carried over from the earlier version of this project --- */
+  .rec-list{ display:flex; flex-direction:column; gap:14px; }
+  .rec-card{
+    display:flex; background: var(--surface); border:1px solid var(--line); border-radius: 14px;
+    overflow:hidden; cursor:pointer; position:relative;
+    transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+  }
+  .rec-card::before{
+    content:''; position:absolute; left:0; top:0; bottom:0; width:3px;
+    background: linear-gradient(to bottom, var(--accent), var(--accent-dim));
+  }
+  .rec-card:hover{
+    border-color: var(--accent-dim); transform: translateY(-2px);
+    box-shadow: 0 16px 40px -18px rgba(0,0,0,.65), 0 0 0 1px rgba(20,184,166,.08);
+  }
+  .rec-card:hover .rec-hint{ opacity:.7; }
+  .rec-poster{ width:92px; min-width:92px; background: var(--surface-2); position:relative; }
+  .rec-poster img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .rec-score{
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
+    padding: 10px 14px; border-right:1px solid var(--line); flex-shrink:0; min-width:64px;
+  }
+  .rec-score-label{ font-size:9px; letter-spacing:1.5px; color:var(--text-dim); font-weight:700; text-transform:uppercase; }
+  .rec-score-star{ color: var(--accent); font-size:13px; }
+  .rec-score-val{ font-family:'Bebas Neue',sans-serif; font-size:22px; color: var(--text); line-height:1; }
+  .rec-score-denom{ font-size:10px; color: var(--text-dim); }
+  .rec-body{ flex:1; padding: 14px 18px; display:flex; flex-direction:column; gap:6px; min-width:0; }
+  .rec-top{ display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; }
+  .rec-rank{ font-family:'Bebas Neue',sans-serif; font-size:14px; color: var(--accent-dim); }
+  .rec-title{ font-size:17px; font-weight:600; color: var(--text); line-height:1.25; }
+  .rec-genres{ display:flex; flex-wrap:wrap; gap:5px; }
+  .rec-crew{ font-size:11px; color: var(--text-dim); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .rec-crew strong{
+    color: var(--accent); font-size:9px; letter-spacing:1px; text-transform:uppercase;
+    margin-right:6px; font-weight:700;
+  }
+  .rec-overview{
+    font-size:12.5px; color: var(--text-dim); line-height:1.65;
+    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+  }
+  .rec-actions{ display:flex; gap:6px; margin-top:2px; }
+  .rec-hint{
+    font-size:9px; color: var(--text-dim); letter-spacing:.05em; text-transform:uppercase;
+    opacity:0; transition: opacity .2s ease; margin-top:auto;
+  }
+  @media (max-width:640px){
+    .rec-poster{ width:70px; min-width:70px; }
+    .rec-score{ min-width:48px; padding:8px 8px; }
+    .rec-title{ font-size:15px; }
+  }
+
+  /* --- "searched movie" hero card (a large, featured variant of rec-card) --- */
+  .searched-hero{
+    display:none; margin: 0 0 22px;
+    animation: heroIn .32s ease both;
+  }
+  @keyframes heroIn{ from{ opacity:0; transform: translateY(8px); } to{ opacity:1; transform:translateY(0); } }
+  .rec-card-featured{
+    border-color: var(--accent-dim);
+    box-shadow: 0 20px 50px -20px rgba(20,184,166,.18);
+  }
+  .rec-card-featured .rec-poster{ width:150px; min-width:150px; }
+  .rec-card-featured .rec-body{ padding:20px 24px; gap:8px; }
+  .rec-card-featured .hero-badge{
+    display:inline-flex; align-items:center; gap:6px; align-self:flex-start;
+    background: rgba(20,184,166,.1); border:1px solid rgba(20,184,166,.25); color: var(--accent);
+    font-size:10px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase;
+    padding:4px 10px; border-radius:20px; margin-bottom:2px;
+  }
+  .rec-card-featured .rec-title{ font-size:24px; }
+  .rec-card-featured .rec-overview-lg{
+    -webkit-line-clamp:3; font-size:13px;
+  }
+  @media (max-width:640px){
+    .rec-card-featured{ flex-direction:column; }
+    .rec-card-featured .rec-poster{ width:100%; height:220px; }
+    .rec-card-featured .rec-score{ border-right:none; border-bottom:1px solid var(--line); flex-direction:row; padding:8px 14px; }
+  }
+
+  /* --- search panel --- */
+  .search-panel{
+    max-width: 720px; margin: 0 auto;
+    background: linear-gradient(180deg, var(--surface) 0%, #131319 100%);
+    border: 1px solid var(--line);
+    border-radius: 22px;
+    padding: 30px 34px 34px;
+    box-shadow: 0 30px 60px -30px rgba(20,184,166,0.12), 0 0 0 1px rgba(255,255,255,0.02) inset;
+    position: relative;
+  }
+  .segmented{
+    position:relative; display:flex; background: var(--surface-2); border-radius: 999px;
+    padding: 4px; margin-bottom: 22px; border: 1px solid var(--line);
+  }
+  .seg-thumb{
+    position:absolute; top:4px; left:4px; width: calc(50% - 4px); height: calc(100% - 8px);
+    background: var(--accent); border-radius: 999px; z-index:0;
+    transition: transform .25s cubic-bezier(.5,0,.2,1);
+  }
+  .seg-btn{
+    flex:1; position:relative; z-index:1; background:transparent; border:none;
+    padding: 11px 0; font-family:'Sora',sans-serif; font-size:14px; font-weight:700;
+    color: var(--text-dim); cursor:pointer; border-radius:999px; transition: color .2s ease;
+  }
+  .seg-btn.active{ color:#062420; }
+
+  .panel-hint{ color: var(--text-dim); font-size:13px; margin: 0 0 18px; text-align:center; }
+
+  .search-row{
+    display:flex; align-items:center; gap:10px;
+    background: var(--surface-2); border:1px solid var(--line); border-radius: 14px;
+    padding: 6px 6px 6px 16px; position: relative;
+  }
+  .search-row .search-icon{ color: var(--text-dim); font-size:16px; }
+  .search-row input{
+    flex:1; background: transparent; border:none;
+    padding: 12px 4px; color: var(--text); font-family:'Sora',sans-serif; font-size:15px;
+  }
+  .search-row input:focus{ outline:none; }
+  .search-row .btn{ flex-shrink:0; }
+  .btn-wide{ width:100%; margin-top:6px; }
+
+  /* --- autocomplete dropdown (used by both the homepage and results-page search bars) --- */
+  #autocomplete, #results-autocomplete{
+    position:absolute; top: calc(100% + 8px); left:0; right:0;
+    background: var(--surface-2); border:1px solid var(--line); border-radius: 12px;
+    overflow: hidden; z-index: 60; display:none;
+    box-shadow: 0 20px 40px rgba(0,0,0,.5);
+  }
+  #autocomplete.open, #results-autocomplete.open{ display:block; }
+  .ac-item{
+    display:flex; align-items:center; gap:10px; padding: 9px 12px; cursor:pointer;
+    border-bottom: 1px solid var(--line);
+  }
+  .ac-item:last-child{ border-bottom:none; }
+  .ac-item:hover{ background: rgba(20,184,166,.08); }
+  .ac-item img{ width:38px; height:57px; object-fit:cover; border-radius:5px; background:var(--surface); flex-shrink:0; }
+  .ac-title{ font-size:13px; font-weight:600; }
+  .ac-sub{ font-size:11px; color: var(--text-dim); }
+  .ac-score{ margin-left:auto; font-size:12px; color: var(--accent); font-weight:700; }
+
+  .picker{
+    display:flex; gap:14px; flex-wrap:wrap; justify-content:center; margin-bottom: 22px;
+  }
+  /* The multi-movie picker now renders in the wide results-page section — with flex:1 1 0
+     the slots were stretching to fill all that empty space, so we cap their width here. */
+  #picker{ flex-wrap: nowrap; gap: 10px; max-width: 620px; margin-left:auto; margin-right:auto; }
+  #picker .slot{ width:auto; height:auto; aspect-ratio: 2/3; flex: 1 1 0; min-width:0; max-width:120px; padding:6px; }
+  #picker .slot .plus{ font-size:22px; }
+  #picker .slot-cap{ font-size:9px; padding: 12px 4px 4px; }
+
+  /* --- "Your favourites" strip: plain poster-only cards — hovering reveals a ✕ in the
+     top-right corner to remove it, and a rating badge appears top-left if you've rated it --- */
+  .fav-card-mini .body,
+  .fav-card-mini .card-hint,
+  .fav-card-mini .actions{ display:none; }
+  .card .fav-remove{
+    position:absolute; top:8px; right:8px; width:28px; height:28px; border-radius:50%;
+    background: rgba(0,0,0,.65); color:#fff; font-size:13px; display:flex; align-items:center; justify-content:center;
+    z-index:3; opacity:0; transition: opacity .15s ease, background .15s ease;
+  }
+  .card:hover .fav-remove{ opacity:1; }
+  .card .fav-remove:hover{ background: var(--red); }
+  .fav-add-tile{
+    border:1.5px dashed var(--line); background: var(--surface); cursor:pointer;
+    display:flex; align-items:center; justify-content:center; flex-direction:column; gap:6px;
+  }
+  .fav-add-tile:hover{ border-color: var(--accent); }
+  .fav-add-tile .plus{ font-size:30px; color: var(--text-dim); font-family:'Bebas Neue',sans-serif; }
+  .fav-add-tile span{ font-size:12px; color: var(--text-dim); text-align:center; padding:0 8px; }
+  .slot{
+    width:140px; height:198px; border-radius: var(--radius); border:1.5px dashed var(--line);
+    display:flex; align-items:center; justify-content:center; flex-direction:column; gap:6px;
+    background: var(--surface); cursor:pointer; text-align:center; padding:8px; position:relative;
+    overflow: visible;
+  }
+  .slot:hover{ border-color: var(--accent); }
+  .slot .plus{ font-size:32px; color: var(--text-dim); font-family:'Bebas Neue',sans-serif; }
+  .slot.filled{ border-style:solid; border-color: var(--accent-dim); padding:0; overflow:hidden; cursor:default; }
+  .slot .fname{ font-size:12px; font-weight:600; line-height:1.3; }
+  .slot .remove{
+    position:absolute; top:6px; right:6px; width:20px; height:20px; border-radius:50%;
+    background: var(--red); color:#fff; font-size:12px; display:flex; align-items:center; justify-content:center; cursor:pointer;
+    z-index: 3;
+  }
+  .slot-poster{ width:100%; height:100%; object-fit:cover; display:block; }
+  .slot-cap{
+    position:absolute; left:0; right:0; bottom:0;
+    background: linear-gradient(to top, rgba(0,0,0,.9), transparent);
+    color:#fff; font-size:10px; font-weight:600; line-height:1.25;
+    padding: 16px 6px 6px; text-align:center;
+  }
+
+  /* --- centered "pick a movie" search modal (used by the multi-search slots) --- */
+  .search-modal{
+    background: linear-gradient(180deg, var(--surface) 0%, #131319 100%);
+    border: 1px solid var(--line); border-radius: 22px;
+    padding: 30px 34px 34px; width: 520px; max-width: 100%;
+    position: relative; max-height: 82vh; display:flex; flex-direction:column;
+  }
+  .search-modal h3{ margin:0 0 18px; font-size:24px; text-align:center; }
+  .search-modal-close{
+    position:absolute; top:14px; right:14px; width:34px; height:34px; border-radius:50%;
+    background: rgba(0,0,0,.5); border:1px solid var(--line); color:var(--text);
+    display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:5; font-size:15px;
+  }
+  .search-modal-close:hover{ border-color: var(--accent); color: var(--accent); }
+  .search-modal-results{
+    margin-top:16px; display:flex; flex-direction:column; gap:2px;
+    overflow-y:auto; border-top:1px solid var(--line);
+  }
+  .search-modal-results:empty{ border-top:none; }
+
+  footer{ text-align:center; color: var(--text-dim); font-size:12px; padding: 30px 0; flex-shrink:0; }
+
+  /* --- modal (auth) --- */
+  .overlay{
+    position:fixed; inset:0; background: rgba(0,0,0,0.6); display:none; align-items:center; justify-content:center; z-index:100;
+    padding: 20px;
+  }
+  .overlay.open{ display:flex; }
+  .modal{
+    background: var(--surface); border:1px solid var(--line); border-radius: var(--radius);
+    padding: 28px; width: 320px; display:flex; flex-direction:column; gap:12px;
+  }
+  .modal h3{ margin:0 0 6px; font-size:26px; }
+  .modal input{
+    background: var(--surface-2); border:1px solid var(--line); border-radius:8px; padding:10px 12px;
+    color:var(--text); font-family:'Sora',sans-serif; font-size:14px;
+  }
+  .modal-error{ color: var(--red); font-size:12px; min-height:14px; }
+  .pw-rules{
+    display:none; flex-direction:column; gap:5px; margin-top:-6px;
+    padding:10px 12px; background: var(--surface-2); border:1px solid var(--line); border-radius:8px;
+  }
+  .pw-rule{ font-size:11.5px; color: var(--text-dim); display:flex; align-items:center; gap:7px; transition: color .15s ease; }
+  .pw-rule .pw-rule-icon{ font-size:10px; width:12px; text-align:center; flex-shrink:0; }
+  .pw-rule.met{ color: var(--green); }
+  .modal-switch{ font-size:12px; color: var(--text-dim); text-align:center; cursor:pointer; }
+  .modal-switch span{ color: var(--accent); }
+
+  /* --- rating modal --- */
+  .rating-modal{ width: 400px; position:relative; text-align:center; align-items:center; }
+  .rating-close{
+    position:absolute; top:14px; right:14px; width:28px; height:28px; border-radius:50%;
+    background: var(--surface-2); border:1px solid var(--line); color:var(--text-dim);
+    display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:12px;
+  }
+  .rating-close:hover{ color: var(--accent); border-color: var(--accent); }
+  .rating-modal h3{ margin:4px 0 0; }
+  .rating-sub{ font-size:12px; color: var(--text-dim); margin:0 0 4px; }
+  .stars-row{ display:flex; gap:6px; justify-content:center; }
+  .star{
+    font-size:26px; color: var(--line); cursor:pointer; transition: color .12s ease, transform .12s ease;
+    user-select:none;
+  }
+  .star:hover{ transform: scale(1.15); }
+  .star.filled{ color: var(--accent); }
+  .rating-score-lbl{ font-size:13px; color: var(--text-dim); min-height:16px; }
+  .rating-watchlist-check{
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    font-size:13px; color: var(--text-dim); cursor:pointer; user-select:none;
+  }
+  .rating-watchlist-check input{ width:16px; height:16px; accent-color: var(--accent); cursor:pointer; }
+  .rating-btns{ display:flex; flex-direction:column; gap:8px; width:100%; margin-top:4px; }
+
+  /* --- delete-account confirmation modal --- */
+  .danger-modal{ width: 340px; position:relative; text-align:center; align-items:center; }
+  .danger-modal h3{ margin:4px 0 0; color: var(--red); }
+  .danger-modal p{ font-size:13px; color: var(--text-dim); margin:0; line-height:1.5; }
+  .btn-danger{ background: var(--red); color:#fff; }
+  .btn-danger:hover{ background:#ff5468; }
+  .dd-item.danger{ color: var(--red); }
+  .dd-item.danger:hover{ background: rgba(230,57,80,.1); }
+
+  /* --- movie detail modal --- */
+  .detail-modal{
+    background: var(--surface); border:1px solid var(--line); border-radius: 16px;
+    width: 760px; max-width: 100%; max-height: 88vh; overflow-y: auto;
+    display:flex; position:relative;
+  }
+  .detail-modal::-webkit-scrollbar{ width:5px; }
+  .detail-modal::-webkit-scrollbar-thumb{ background: var(--line); border-radius:4px; }
+  .detail-close{
+    position:absolute; top:14px; right:14px; width:34px; height:34px; border-radius:50%;
+    background: rgba(0,0,0,.5); border:1px solid var(--line); color:var(--text);
+    display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:5; font-size:15px;
+  }
+  .detail-close:hover{ border-color: var(--accent); color: var(--accent); }
+  .detail-poster{
+    flex: 0 0 260px; background: var(--surface-2);
+  }
+  .detail-poster img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .detail-body{ flex:1; padding: 30px 32px; display:flex; flex-direction:column; gap:14px; min-width:0; }
+  .detail-title{ font-size:36px; line-height:1; margin:0; }
+  .detail-rating{ display:flex; align-items:center; gap:10px; color: var(--accent); font-weight:700; font-size:15px; }
+  .detail-user-rating-pill{
+    display:inline-flex; align-items:center; gap:5px;
+    background: rgba(20,184,166,.12); border:1px solid var(--accent-dim); color: var(--accent);
+    font-size:12px; font-weight:700; padding:3px 10px; border-radius:999px;
+  }
+  .detail-genres{ display:flex; flex-wrap:wrap; gap:6px; }
+  .detail-overview{ color: var(--text-dim); font-size:14px; line-height:1.7; }
+  .detail-people{ font-size:13px; color: var(--text-dim); }
+  .detail-people strong{ color: var(--text); font-weight:600; margin-right:6px; }
+  .detail-actions{
+    display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top: 4px;
+  }
+  .detail-actions .icon-btn{
+    width:100%; height:auto; border-radius: 12px; padding: 10px 14px; gap:6px;
+    display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:600;
+    text-align:center; white-space:normal; line-height:1.3;
+  }
+  .detail-section-label{
+    font-size:10px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase;
+    color: var(--text-dim); margin-top: 6px;
+  }
+  .detail-ext-links{ display:flex; flex-wrap:wrap; gap:8px; }
+  .btn-ext{
+    display:inline-flex; align-items:center; gap:7px; text-decoration:none;
+    background: var(--surface-2); color: var(--text); border:1px solid var(--line);
+    border-radius: 999px; padding: 9px 16px; font-size:13px; font-weight:600;
+    transition: all .15s ease;
+  }
+  .btn-ext:hover{ border-color: var(--accent); color: var(--accent); transform: translateY(-1px); }
+
+  @media (max-width: 640px){
+    .detail-modal{ flex-direction:column; max-height: 92vh; }
+    .detail-poster{ flex: 0 0 220px; }
+  }
+
+  /* --- account dropdown menu (shown once logged in) --- */
+  .user-chip{
+    display:flex; align-items:center; gap:8px; padding:6px 12px 6px 6px; border-radius:999px;
+    background: var(--surface-2); border:1px solid var(--line); cursor:pointer; font-size:13px;
+  }
+  .user-avatar{
+    width:26px; height:26px; border-radius:50%; background: var(--accent); color:#062420;
+    display:flex; align-items:center; justify-content:center; font-weight:700; font-size:12px;
+  }
+  .user-chevron{ color: var(--text-dim); font-size:10px; }
+  #dropdown{
+    position:absolute; top: calc(100% + 10px); right:0; width:210px;
+    background: var(--surface-2); border:1px solid var(--line); border-radius:12px;
+    box-shadow: 0 20px 40px rgba(0,0,0,.5); overflow:hidden; display:none; z-index: 60;
+  }
+  #dropdown.open{ display:block; }
+  .dd-item{
+    width:100%; text-align:left; background:none; border:none; color: var(--text);
+    padding: 11px 14px; font-size:13px; display:flex; align-items:center; gap:9px; cursor:pointer;
+    border-radius:0; font-weight:500;
+  }
+  .dd-item:hover{ background: rgba(20,184,166,.08); }
+  .dd-sep{ border:none; border-top:1px solid var(--line); margin:0; }
+
+  /* --- page header (watchlist / favourites / watched) --- */
+  .page-header{ display:flex; align-items:center; justify-content:space-between; margin-bottom: 26px; }
+  .page-header h2{ font-size: 32px; margin:0; }
+
+  /* --- empty-list state (watchlist / favourites / watched) --- */
+  .page-empty{
+    grid-column: 1 / -1; text-align:center; padding: 90px 20px 70px;
+  }
+  .page-empty-icon{
+    font-size:44px; opacity:.18; margin-bottom:18px;
+    width:84px; height:84px; border-radius:50%; border:1.5px dashed var(--line);
+    display:flex; align-items:center; justify-content:center; margin:0 auto 20px;
+  }
+  .page-empty-title{
+    font-family:'Bebas Neue',sans-serif; font-size:30px; letter-spacing:.03em;
+    color: var(--text-dim); margin-bottom:10px;
+  }
+  .page-empty-sub{
+    font-size:13px; color: var(--text-dim); line-height:1.7; font-weight:400;
+    max-width:340px; margin:0 auto;
+  }
+
+  .toast{
+    position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px);
+    background: var(--surface-2); border:1px solid var(--line); color:var(--text);
+    padding: 12px 20px; border-radius: var(--radius); font-size:13px; opacity:0; pointer-events:none;
+    transition: all .2s ease; z-index: 200;
+  }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+  @media (max-width:640px){
+    .header-inner{ padding:16px 0; }
+    .logo img{ height: 26px; }
+    .hero{ padding: 40px 0 24px; }
+    .search-panel{ padding: 22px 18px 26px; border-radius: 18px; }
+    .search-modal{ padding: 22px 18px 26px; border-radius: 18px; }
+    .slot{ width: 118px; height: 168px; }
+    .card:hover{ transform: translateY(-4px) scale(1.04); }
+  }
+</style>
+</head>
+<body>
+
+<div class="filmstrip"></div>
+<header>
+  <div class="header-inner">
+    <div class="logo" id="logo-home"><img src="/static/images/logo.png" alt="NextWatch"></div>
+    <div id="auth-area"></div>
+  </div>
+</header>
+
+<main>
+  <div id="page-root"></div>
+</main>
+
+<footer>NextWatch — a database systems course project</footer>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h3 id="modal-title">Log in</h3>
+    <input type="text" id="modal-username" placeholder="Username">
+    <input type="password" id="modal-password" placeholder="Password">
+    <div class="pw-rules" id="pw-rules"></div>
+    <div class="modal-error" id="modal-error"></div>
+    <button class="btn btn-accent" id="modal-submit">Log in</button>
+    <div class="modal-switch" id="modal-switch">Don't have an account? <span>Sign up</span></div>
+  </div>
+</div>
+
+<div class="overlay" id="detail-overlay">
+  <div class="detail-modal" id="detail-modal">
+    <div class="detail-close" id="detail-close">✕</div>
+    <div class="detail-poster"><img id="detail-poster-img" alt=""></div>
+    <div class="detail-body">
+      <h2 class="detail-title" id="detail-title"></h2>
+      <div class="detail-rating" id="detail-rating"></div>
+      <div class="detail-genres" id="detail-genres"></div>
+      <p class="detail-overview" id="detail-overview"></p>
+      <div class="detail-people" id="detail-people"></div>
+      <div class="detail-section-label">Actions</div>
+      <div class="detail-actions" id="detail-actions"></div>
+      <div class="detail-section-label">Search Elsewhere</div>
+      <div class="detail-ext-links" id="detail-ext-links"></div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="rating-overlay">
+  <div class="modal rating-modal">
+    <div class="rating-close" id="rating-close">✕</div>
+    <h3 id="rating-modal-title">Rate This Movie</h3>
+    <p class="rating-sub">Click a star to rate it from 1–10.</p>
+    <div class="stars-row" id="stars-row"></div>
+    <div class="rating-score-lbl" id="rating-score-lbl">No rating selected yet</div>
+    <label class="rating-watchlist-check" id="rating-watchlist-check" style="display:none;">
+      <input type="checkbox" id="rating-watchlist-checkbox">
+      <span>Remove from watchlist</span>
+    </label>
+    <div class="rating-btns">
+      <button class="btn btn-accent btn-wide" id="rating-confirm-btn">Confirm</button>
+      <button class="btn btn-ghost btn-wide" id="rating-delete-btn" style="display:none;">Remove Rating</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="delete-account-overlay">
+  <div class="modal danger-modal">
+    <h3>Delete Account</h3>
+    <p>This action can't be undone. Your account, favourites, watchlist, watched list and ratings will all be permanently deleted.</p>
+    <div class="rating-btns">
+      <button class="btn btn-danger btn-wide" id="delete-account-confirm-btn">Yes, delete my account</button>
+      <button class="btn btn-ghost btn-wide" id="delete-account-cancel-btn">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="slot-search-overlay">
+  <div class="search-modal">
+    <div class="search-modal-close" id="slot-search-close">✕</div>
+    <h3>Pick a Movie</h3>
+    <div class="search-row">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="slot-search-input" placeholder="search for a movie..." autocomplete="off">
+    </div>
+    <div class="search-modal-results" id="slot-search-results"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const TMDB_IMG = "https://image.tmdb.org/t/p/w300";
+const TMDB_IMG_LG = "https://image.tmdb.org/t/p/w500";
+// Must match FAVOURITES_LIMIT in main.py. Checking this client-side lets us reject an
+// over-the-limit "add" instantly, before even touching the network - see handleCardAction()
+// below for why that matters.
+const FAVOURITES_LIMIT = 5;
+const state = {
+  user: null,
+  mode: "login",
+  slots: Array(5).fill(null),
+  favourites: new Set(),
+  favouriteMovies: [], // {id, title, poster_path} — full movie data for the homepage favourites strip
+  watchlist: new Set(),
+  watched: new Set(),
+  ratings: new Map(), // movie_id -> rating (1-10)
+  page: "home", // home | watchlist | favourites | watched | ratings
+};
+
+// ---------- helpers ----------
+function toast(msg){
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(()=> t.classList.remove("show"), 2200);
+}
+// Builds `count` skeleton placeholder cards as an HTML string, to drop into a grid/row while
+// the real data is still loading. `withLines` adds a couple of shimmering text-line
+// placeholders below the poster (for grid-style cards); the horizontal popular-movies row
+// only ever shows the poster, so it leaves `withLines` off.
+function skeletonCards(count, withLines){
+  const card = `<div class="skeleton-card">
+    <div class="skeleton-poster"></div>
+    ${withLines ? `<div class="skeleton-lines"><div class="skeleton-line"></div><div class="skeleton-line short"></div></div>` : ""}
+  </div>`;
+  return card.repeat(count);
+}
+function poster(path, size){
+  const base = size === "lg" ? TMDB_IMG_LG : TMDB_IMG;
+  return path ? base + path : "https://via.placeholder.com/300x450/16161c/8f8d99?text=No+Poster";
+}
+async function api(path, opts={}){
+  const res = await fetch(path, {
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+    ...opts,
+  });
+  const data = await res.json().catch(()=> ({}));
+  if(!res.ok) throw new Error(data.error || "Something went wrong.");
+  return data;
+}
+// Some endpoints might not exist yet (e.g. before the list endpoints were added) — fail quietly and return an empty result instead of breaking the page.
+async function apiSafe(path, opts={}, fallback=[]){
+  try{ return await api(path, opts); } catch(err){ return fallback; }
+}
+
+// ---------- auth ----------
+function renderAuth(){
+  const el = document.getElementById("auth-area");
+  if(state.user){
+    el.innerHTML = `
+      <div class="user-chip" id="user-chip">
+        <div class="user-avatar">${state.user.username.charAt(0).toUpperCase()}</div>
+        <span>${state.user.username}</span>
+        <span class="user-chevron">▾</span>
+      </div>
+      <div id="dropdown">
+        <button class="dd-item" data-page="watchlist">➕ Watchlist</button>
+        <button class="dd-item" data-page="watched">✓ Watched</button>
+        <button class="dd-item" data-page="ratings">★ Your Ratings</button>
+        <hr class="dd-sep">
+        <button class="dd-item" id="logout-btn">→ Log Out</button>
+        <button class="dd-item danger" id="delete-account-btn">🗑 Delete Account</button>
+      </div>`;
+    document.getElementById("user-chip").onclick = (e)=>{
+      e.stopPropagation();
+      document.getElementById("dropdown").classList.toggle("open");
+    };
+    el.querySelectorAll(".dd-item[data-page]").forEach(btn=>{
+      btn.onclick = ()=>{ document.getElementById("dropdown").classList.remove("open"); goToPage(btn.dataset.page); };
+    });
+    document.getElementById("logout-btn").onclick = async ()=>{
+      await api("/api/logout", { method:"POST" });
+      state.user = null; state.favourites = new Set(); state.favouriteMovies = []; state.watchlist = new Set(); state.watched = new Set(); state.ratings = new Map();
+      renderAuth(); toast("Logged out."); goToPage("home");
+    };
+    document.getElementById("delete-account-btn").onclick = ()=>{
+      document.getElementById("dropdown").classList.remove("open");
+      document.getElementById("delete-account-overlay").classList.add("open");
+    };
+  } else {
+    el.innerHTML = `
+      <button class="btn btn-ghost btn-sm" id="login-open">Log in</button>
+      <button class="btn btn-accent btn-sm" id="register-open">Sign up</button>`;
+    document.getElementById("login-open").onclick = ()=> openModal("login");
+    document.getElementById("register-open").onclick = ()=> openModal("register");
+  }
+}
+document.addEventListener("click", (e)=>{
+  const dd = document.getElementById("dropdown");
+  if(dd && !e.target.closest("#auth-area")) dd.classList.remove("open");
+  const ac = document.getElementById("autocomplete");
+  if(ac && !e.target.closest("#single-input") && !e.target.closest("#autocomplete")) closeAutocomplete();
+  const rac = document.getElementById("results-autocomplete");
+  if(rac && !e.target.closest("#results-search-input") && !e.target.closest("#results-autocomplete")) closeResultsAutocomplete();
+});
+document.getElementById("logo-home").onclick = ()=> goToPage("home");
+
+function openModal(mode){
+  state.mode = mode;
+  document.getElementById("overlay").classList.add("open");
+  document.getElementById("modal-error").textContent = "";
+  document.getElementById("modal-username").value = "";
+  document.getElementById("modal-password").value = "";
+  syncModalText();
+}
+// Mirrors check_password() on the backend exactly, so signup can show a live preview of which rules are met as the user types.
+const PW_RULES = [
+  { key:"length",  label:"At least 8 characters",         test: p => p.length >= 8 },
+  { key:"digit",   label:"At least one digit",           test: p => /[0-9]/.test(p) },
+  { key:"upper",   label:"At least one uppercase letter", test: p => /[A-Z]/.test(p) },
+  { key:"lower",   label:"At least one lowercase letter", test: p => /[a-z]/.test(p) },
+  { key:"special", label:"At least one special character", test: p => [...p].some(c => PUNCTUATION.includes(c)) },
+  { key:"nospace", label:"No spaces allowed", test: p => !/\s/.test(p) },
+];
+const PUNCTUATION = `!"#$%&'()*+,-./:;<=>?@[\\]^_\`{|}~`; // exactly the same character set as Python's string.punctuation
+function renderPwRules(){
+  const wrap = document.getElementById("pw-rules");
+  const submitBtn = document.getElementById("modal-submit");
+  if(!wrap) return;
+  const isRegister = state.mode === "register";
+  wrap.style.display = isRegister ? "flex" : "none";
+  if(!isRegister){ if(submitBtn) submitBtn.disabled = false; return; }
+  const pw = document.getElementById("modal-password").value;
+  let allMet = true;
+  wrap.innerHTML = PW_RULES.map(r=>{
+    // Technically a rule like "no spaces" is already satisfied by an empty string, but
+    // showing it green all on its own before the user has typed anything is just confusing —
+    // so we keep every rule looking "unmet" while the field is empty.
+    const ok = pw.length > 0 && r.test(pw);
+    if(!ok) allMet = false;
+    return `<div class="pw-rule ${ok?'met':''}"><span class="pw-rule-icon">${ok?'✓':'○'}</span>${r.label}</div>`;
+  }).join("");
+  if(submitBtn) submitBtn.disabled = pw.length > 0 && !allMet;
+}
+function syncModalText(){
+  const isLogin = state.mode === "login";
+  document.getElementById("modal-title").textContent = isLogin ? "Log in" : "Sign up";
+  document.getElementById("modal-submit").textContent = isLogin ? "Log in" : "Sign up";
+  document.getElementById("modal-switch").innerHTML = isLogin
+    ? 'Don\'t have an account? <span>Sign up</span>'
+    : 'Already have an account? <span>Log in</span>';
+  renderPwRules();
+}
+document.getElementById("modal-password").addEventListener("input", renderPwRules);
+document.getElementById("overlay").onclick = (e)=>{
+  if(e.target.id === "overlay") document.getElementById("overlay").classList.remove("open");
+};
+document.getElementById("modal-switch").onclick = ()=>{
+  state.mode = state.mode === "login" ? "register" : "login";
+  syncModalText();
+};
+document.getElementById("modal-submit").onclick = async ()=>{
+  const username = document.getElementById("modal-username").value.trim();
+  const password = document.getElementById("modal-password").value;
+  const errEl = document.getElementById("modal-error");
+  errEl.textContent = "";
+  try{
+    if(state.mode === "register"){
+      await api("/api/register", { method:"POST", body: JSON.stringify({username, password}) });
+      toast("Account created — you can log in now.");
+      state.mode = "login"; syncModalText();
+      return;
+    }
+    const data = await api("/api/login", { method:"POST", body: JSON.stringify({username, password}) });
+    state.user = { id: data.user_id, username: data.username };
+    document.getElementById("overlay").classList.remove("open");
+    renderAuth();
+    await loadUserLists();
+    toast(`Welcome back, ${data.username}.`);
+    renderCurrentPage();
+  } catch(err){
+    errEl.textContent = err.message;
+  }
+};
+
+async function checkSession(){
+  const data = await apiSafe("/api/me", {}, {});
+  if(data.user_id){
+    state.user = { id: data.user_id, username: data.username };
+    await loadUserLists();
+  }
+  renderAuth();
+}
+
+// fetch the user's favourite/watchlist/watched id lists and ratings (if any exist yet)
+async function loadUserLists(){
+  if(!state.user) return;
+  const [fav, wl, wt, rt] = await Promise.all([
+    apiSafe("/api/favourites"), apiSafe("/api/watchlist"), apiSafe("/api/watched"), apiSafe("/api/ratings"),
+  ]);
+  const asList = (arr)=> Array.isArray(arr) ? arr : (arr.items||arr.movies||[]);
+  const favList = asList(fav);
+  const ids = (arr)=> new Set(asList(arr).map(m => typeof m === "object" ? m.id : m));
+  state.favourites = new Set(favList.map(m => typeof m === "object" ? m.id : m));
+  state.favouriteMovies = favList.filter(m => typeof m === "object");
+  state.watchlist  = ids(wl);
+  state.watched    = ids(wt);
+  const rtList = asList(rt);
+  state.ratings = new Map(rtList.map(m => [m.id, m.rating ?? m.user_rating ?? m.movie_rating]));
+}
+
+// ---------- card rendering ----------
+function actionMeta(action){
+  return {
+    favourites: { icon: "♥", set: state.favourites, label: "Add to favourites", labelActive: "Remove from favourites" },
+    watchlist:  { icon: "＋", set: state.watchlist,  label: "Add to watchlist", labelActive: "Remove from watchlist" },
+    watched:    { icon: "✓", set: state.watched,    label: "Mark as watched", labelActive: "Remove from watched" },
+  }[action];
+}
+function movieCard(movie){
+  const div = document.createElement("div");
+  div.className = "card";
+  const userRating = movie.user_rating ?? movie.rating ?? state.ratings.get(movie.id);
+  // A movie's own score always comes from display_rating/vote_avg (the real TMDB rating) —
+  // weighted_rating is only ever used for SORTING, never for display (see the comment in engine.py).
+  const rating = movie.display_rating ?? movie.vote_avg;
+  div.innerHTML = `
+    <img class="poster" src="${poster(movie.poster_path)}" alt="${movie.title}" loading="lazy">
+    ${userRating ? `<div class="user-rating-badge" title="Your rating: ${userRating}/10">${userRating}</div>` : ""}
+    <div class="body">
+      <p class="title">${movie.title}</p>
+      <div class="rating" style="${rating ? '' : 'visibility:hidden'}">★ ${rating ? Number(rating).toFixed(1) : '0.0'}</div>
+    </div>
+    <div class="card-hint">Click for details</div>
+    <div class="actions" data-movie-id="${movie.id}">
+      <div class="icon-btn ${state.favourites.has(movie.id)?'active':''}" data-action="favourites" title="Add to favourites">♥</div>
+      <div class="icon-btn ${state.watchlist.has(movie.id)?'active':''}" data-action="watchlist" title="Add to watchlist">＋</div>
+      <div class="icon-btn ${state.watched.has(movie.id)?'active':''}" data-action="watched" title="Mark as watched">✓</div>
+      <div class="icon-btn ${state.ratings.has(movie.id)?'active':''}" data-action="rate" title="Rate this">★</div>
+    </div>`;
+  div.querySelectorAll(".icon-btn").forEach(btn=>{
+    btn.onclick = (e)=>{
+      e.stopPropagation();
+      if(btn.dataset.action === "rate") openRatingModal(movie);
+      else handleCardAction(movie, btn);
+    };
+  });
+  div.addEventListener("click", ()=> openDetail(movie));
+  return div;
+}
+// ── the old project's detailed "vcard" design, carried over into the new theme — used on the results page ──
+function recCard(movie, rank){
+  const div = document.createElement("div");
+  div.className = "rec-card";
+  const rating = movie.display_rating ?? movie.vote_avg;
+  const userRating = movie.user_rating ?? movie.rating ?? state.ratings.get(movie.id);
+  const genres = (movie.genres ? String(movie.genres).split(",") : []).filter(Boolean).slice(0,4);
+  div.innerHTML = `
+    <div class="rec-poster">
+      <img src="${poster(movie.poster_path)}" alt="${movie.title}" loading="lazy">
+      ${userRating ? `<div class="user-rating-badge" title="Your rating: ${userRating}/10">${userRating}</div>` : ""}
+    </div>
+    <div class="rec-score">
+      <div class="rec-score-label">TMDB</div>
+      <div class="rec-score-star">★</div>
+      <div class="rec-score-val">${rating ? Number(rating).toFixed(1) : "–"}</div>
+      <div class="rec-score-denom">/ 10</div>
+    </div>
+    <div class="rec-body">
+      <div class="rec-top">
+        <span class="rec-rank">#${rank}</span>
+        <span class="rec-title">${movie.title}</span>
+      </div>
+      ${genres.length ? `<div class="rec-genres">${genres.map(g=>`<span class="genre-tag">${g.trim()}</span>`).join("")}</div>` : ""}
+      ${movie.directors ? `<div class="rec-crew"><strong>Director</strong>${movie.directors}</div>` : ""}
+      ${movie.overview ? `<div class="rec-overview">${movie.overview}</div>` : ""}
+      <div class="rec-actions" data-movie-id="${movie.id}">
+        <div class="icon-btn ${state.favourites.has(movie.id)?'active':''}" data-action="favourites" title="Add to favourites">♥</div>
+        <div class="icon-btn ${state.watchlist.has(movie.id)?'active':''}" data-action="watchlist" title="Add to watchlist">＋</div>
+        <div class="icon-btn ${state.watched.has(movie.id)?'active':''}" data-action="watched" title="Mark as watched">✓</div>
+        <div class="icon-btn ${state.ratings.has(movie.id)?'active':''}" data-action="rate" title="Rate this">★</div>
+      </div>
+      <div class="rec-hint">↗ Click for details</div>
+    </div>`;
+  div.querySelectorAll(".icon-btn").forEach(btn=>{
+    btn.onclick = (e)=>{
+      e.stopPropagation();
+      if(btn.dataset.action === "rate") openRatingModal(movie);
+      else handleCardAction(movie, btn);
+    };
+  });
+  div.addEventListener("click", ()=> openDetail(movie));
+  return div;
+}
+async function handleCardAction(movie, btn){
+  if(!state.user){ toast("You need to log in first."); openModal("login"); return; }
+  const action = btn.dataset.action;
+  const meta = actionMeta(action);
+  const wasActive = meta.set.has(movie.id);
+  // A rated movie can't be removed from "watched" — the rating has to be removed first.
+  if(action === "watched" && wasActive && state.ratings.has(movie.id)){
+    toast("You've rated this movie. Remove your rating first before taking it off your watched list.");
+    return;
+  }
+  // Reject an over-the-limit favourite BEFORE touching the UI or the network at all. We used
+  // to let the optimistic update happen regardless, so adding a 6th favourite would flash it
+  // onto the screen for a moment and then yank it back out once the backend's 409 came back -
+  // confusing to watch. Checking the count we already have client-side (state.favourites.size)
+  // means we can catch this case instantly, with no flicker and no wasted request.
+  if(action === "favourites" && !wasActive && state.favourites.size >= FAVOURITES_LIMIT){
+    toast(`Your favourites list is full (max ${FAVOURITES_LIMIT}) - remove one first.`);
+    return;
+  }
+  // Ignore a second click on the same button while its request is still in flight (prevents a double-click race).
+  if(btn.dataset.pending === "1") return;
+  btn.dataset.pending = "1";
+
+  // Update the screen FIRST (optimistic UI) — react instantly instead of waiting for the
+  // network request to finish. It used to only update after the request SUCCEEDED; on a slow
+  // connection (or if the backend was doing unnecessary heavy work) the button would look
+  // "unresponsive" for a moment, the user would assume it didn't work and click again, and
+  // that second click would immediately undo the movie they'd just added. Now the icon
+  // changes the instant you click, and the request just happens quietly in the background.
+  if(wasActive){
+    meta.set.delete(movie.id);
+    if(action === "favourites") state.favouriteMovies = state.favouriteMovies.filter(m => m.id !== movie.id);
+  } else {
+    meta.set.add(movie.id);
+    if(action === "favourites") state.favouriteMovies.push(movie);
+  }
+  syncActionButtonsForMovie(movie.id);
+
+  try{
+    await api(`/api/${action}/${movie.id}`, { method: wasActive ? "DELETE" : "POST" });
+    toast(wasActive ? "Removed." : "Added.");
+  } catch(err){
+    // The request failed (e.g. the favourites list is full) — undo the optimistic change.
+    if(wasActive){
+      meta.set.add(movie.id);
+      if(action === "favourites") state.favouriteMovies.push(movie);
+    } else {
+      meta.set.delete(movie.id);
+      if(action === "favourites") state.favouriteMovies = state.favouriteMovies.filter(m => m.id !== movie.id);
+    }
+    syncActionButtonsForMovie(movie.id);
+    toast(err.message);
+  } finally {
+    btn.dataset.pending = "0";
+  }
+}
+
+// Repaints the icons on every card showing this same movie anywhere on the page (main grid,
+// detail modal, favourites strip) so they all reflect the current favourites/watchlist/watched/ratings state.
+function syncActionButtonsForMovie(movieId){
+  document.querySelectorAll(`[data-movie-id="${movieId}"]`).forEach(wrap=>{
+    wrap.querySelectorAll(".icon-btn[data-action]").forEach(btn=>{
+      const action = btn.dataset.action;
+      if(action === "rate"){ btn.classList.toggle("active", state.ratings.has(movieId)); return; }
+      const meta = actionMeta(action);
+      if(meta) btn.classList.toggle("active", meta.set.has(movieId));
+    });
+  });
+  syncDetailActionButtons(movieId);
+  if(document.getElementById("home-fav-picker")) renderFavouritesStrip();
+}
+
+// ---------- rating modal ----------
+let ratingMovie = null;
+let ratingSelected = 0;
+function openRatingModal(movie){
+  if(!state.user){ toast("You need to log in first."); openModal("login"); return; }
+  ratingMovie = movie;
+  ratingSelected = state.ratings.get(movie.id) || 0;
+  document.getElementById("rating-modal-title").textContent = `Rate "${movie.title}"`;
+  document.getElementById("rating-delete-btn").style.display = state.ratings.has(movie.id) ? "block" : "none";
+  const wlCheck = document.getElementById("rating-watchlist-check");
+  wlCheck.style.display = state.watchlist.has(movie.id) ? "flex" : "none";
+  document.getElementById("rating-watchlist-checkbox").checked = false;
+  renderStars();
+  document.getElementById("rating-overlay").classList.add("open");
+}
+function renderStars(){
+  const row = document.getElementById("stars-row");
+  row.innerHTML = Array.from({length:10}, (_, i)=>{
+    const val = i + 1;
+    return `<span class="star ${val <= ratingSelected ? "filled" : ""}" data-val="${val}">★</span>`;
+  }).join("");
+  row.querySelectorAll(".star").forEach(star=>{
+    star.onclick = ()=>{ ratingSelected = parseInt(star.dataset.val, 10); renderStars(); };
+  });
+  const lbl = document.getElementById("rating-score-lbl");
+  lbl.textContent = ratingSelected ? `Selected rating: ${ratingSelected} / 10` : "No rating selected yet";
+}
+document.getElementById("rating-close").onclick = ()=> document.getElementById("rating-overlay").classList.remove("open");
+document.getElementById("rating-overlay").onclick = (e)=>{
+  if(e.target.id === "rating-overlay") document.getElementById("rating-overlay").classList.remove("open");
+};
+document.getElementById("rating-confirm-btn").onclick = async ()=>{
+  if(!ratingMovie) return;
+  if(!ratingSelected){ toast("Pick a star rating first."); return; }
+  const btn = document.getElementById("rating-confirm-btn");
+  btn.disabled = true; btn.textContent = "Saving...";
+  try{
+    await api(`/api/rating/${ratingMovie.id}`, { method:"POST", body: JSON.stringify({ rating: ratingSelected }) });
+    state.ratings.set(ratingMovie.id, ratingSelected);
+
+    // These two are independent of each other, so we run them in PARALLEL instead of waiting
+    // for one then the other — that cuts the total wait time, and even if one of them fails
+    // the rating itself has already been saved.
+    const wlChecked = document.getElementById("rating-watchlist-checkbox").checked;
+    await Promise.all([
+      state.watched.has(ratingMovie.id) ? Promise.resolve() :
+        api(`/api/watched/${ratingMovie.id}`, { method:"POST" }).then(()=> state.watched.add(ratingMovie.id)).catch(()=>{}),
+      (wlChecked && state.watchlist.has(ratingMovie.id)) ?
+        api(`/api/watchlist/${ratingMovie.id}`, { method:"DELETE" }).then(()=> state.watchlist.delete(ratingMovie.id)).catch(()=>{}) :
+        Promise.resolve(),
+    ]);
+
+    toast("Your rating has been saved.");
+    document.getElementById("rating-overlay").classList.remove("open");
+    syncActionButtonsForMovie(ratingMovie.id);
+    if(state.page === "ratings" || state.page === "watched" || state.page === "watchlist") loadListPage(state.page);
+  } catch(err){
+    toast(err.message);
+  } finally {
+    btn.disabled = false; btn.textContent = "Confirm";
+  }
+};
+document.getElementById("rating-delete-btn").onclick = async ()=>{
+  if(!ratingMovie) return;
+  try{
+    await api(`/api/rating/${ratingMovie.id}`, { method:"DELETE" });
+    state.ratings.delete(ratingMovie.id);
+    toast("Rating removed.");
+    document.getElementById("rating-overlay").classList.remove("open");
+    syncActionButtonsForMovie(ratingMovie.id);
+    if(state.page === "ratings") loadListPage("ratings");
+  } catch(err){
+    toast(err.message);
+  }
+};
+
+// ---------- account deletion ----------
+document.getElementById("delete-account-cancel-btn").onclick = ()=>{
+  document.getElementById("delete-account-overlay").classList.remove("open");
+};
+document.getElementById("delete-account-overlay").addEventListener("click", (e)=>{
+  if(e.target.id === "delete-account-overlay") document.getElementById("delete-account-overlay").classList.remove("open");
+});
+document.getElementById("delete-account-confirm-btn").onclick = async ()=>{
+  const btn = document.getElementById("delete-account-confirm-btn");
+  btn.disabled = true; btn.textContent = "Deleting...";
+  try{
+    const data = await api("/api/delete", { method:"DELETE" });
+    document.getElementById("delete-account-overlay").classList.remove("open");
+    state.user = null; state.favourites = new Set(); state.favouriteMovies = []; state.watchlist = new Set(); state.watched = new Set(); state.ratings = new Map();
+    renderAuth();
+    toast(data.message || "Your account has been deleted.");
+    goToPage("home");
+  } catch(err){
+    toast(err.message);
+  } finally {
+    btn.disabled = false; btn.textContent = "Yes, delete my account";
+  }
+};
+
+// ---------- movie detail modal ----------
+let detailMovie = null;
+function openDetail(movie){
+  detailMovie = movie;
+  const rating = movie.display_rating ?? movie.vote_avg;
+  const genres = (movie.genres ? String(movie.genres).split(",") : []).filter(Boolean);
+  document.getElementById("detail-poster-img").src = poster(movie.poster_path, "lg");
+  document.getElementById("detail-title").textContent = movie.title;
+  const userRating = state.ratings.get(movie.id);
+  document.getElementById("detail-rating").innerHTML =
+    (rating ? `★ ${Number(rating).toFixed(1)} / 10` : "") +
+    (userRating ? ` <span class="detail-user-rating-pill">★ Your rating: ${userRating}/10</span>` : "");
+  document.getElementById("detail-genres").innerHTML = genres.map(g=>`<span class="genre-tag">${g.trim()}</span>`).join("");
+  document.getElementById("detail-overview").textContent = movie.overview || "No overview available.";
+  const people = [];
+  if(movie.directors) people.push(`<div><strong>Director</strong>${movie.directors}</div>`);
+  if(movie.cast) people.push(`<div><strong>Cast</strong>${String(movie.cast).split(",").slice(0,5).join(", ")}</div>`);
+  document.getElementById("detail-people").innerHTML = people.join("");
+  renderDetailActions(movie);
+  const q = encodeURIComponent(movie.title);
+  document.getElementById("detail-ext-links").innerHTML = `
+    <a class="btn-ext" href="https://www.themoviedb.org/search?query=${q}" target="_blank" rel="noopener">🎬 TMDB</a>
+    <a class="btn-ext" href="https://www.imdb.com/find?q=${q}" target="_blank" rel="noopener">★ IMDb</a>
+    <a class="btn-ext" href="https://letterboxd.com/search/${q}/" target="_blank" rel="noopener">🎞 Letterboxd</a>`;
+  document.getElementById("detail-overlay").classList.add("open");
+}
+function renderDetailActions(movie){
+  const wrap = document.getElementById("detail-actions");
+  const toggleBtns = ["favourites","watchlist","watched"].map(action=>{
+    const meta = actionMeta(action);
+    const active = meta.set.has(movie.id);
+    const label = active ? meta.labelActive : meta.label;
+    return `<div class="icon-btn ${active?'active':''}" data-action="${action}">${meta.icon} ${label}</div>`;
+  }).join("");
+  const rated = state.ratings.has(movie.id);
+  const rateBtn = `<div class="icon-btn ${rated?'active':''}" data-action="rate">★ ${rated ? "Edit your rating" : "Rate"}</div>`;
+  wrap.innerHTML = toggleBtns + rateBtn;
+  wrap.querySelectorAll(".icon-btn").forEach(btn=>{
+    btn.onclick = ()=>{
+      if(btn.dataset.action === "rate") openRatingModal(movie);
+      else handleCardAction(movie, btn);
+    };
+  });
+}
+function syncDetailActionButtons(movieId){
+  if(!detailMovie || detailMovie.id !== movieId) return;
+  renderDetailActions(detailMovie);
+  const rating = detailMovie.display_rating ?? detailMovie.vote_avg;
+  const userRating = state.ratings.get(movieId);
+  document.getElementById("detail-rating").innerHTML =
+    (rating ? `★ ${Number(rating).toFixed(1)} / 10` : "") +
+    (userRating ? ` <span class="detail-user-rating-pill">★ Your rating: ${userRating}/10</span>` : "");
+}
+document.getElementById("detail-close").onclick = ()=> document.getElementById("detail-overlay").classList.remove("open");
+document.getElementById("detail-overlay").onclick = (e)=>{
+  if(e.target.id === "detail-overlay") document.getElementById("detail-overlay").classList.remove("open");
+};
+
+// ---------- page routing (home / watchlist / favourites / watched) ----------
+function goToPage(page){
+  if(page !== "home" && page !== "results" && !state.user){ toast("You need to log in first."); openModal("login"); return; }
+  state.page = page;
+  window.scrollTo({ top: 0, behavior: "instant" });
+  renderCurrentPage();
+}
+function renderCurrentPage(){
+  const root = document.getElementById("page-root");
+  if(state.page === "home"){
+    root.innerHTML = homeTemplate();
+    bindHomeEvents();
+    loadPopular();
+    return;
+  }
+  if(state.page === "results"){
+    root.innerHTML = resultsTemplate();
+    bindResultsEvents();
+    return;
+  }
+  const titles = { watchlist: "Watchlist", favourites: "Favourites", watched: "Watched", ratings: "Your Ratings" };
+  root.innerHTML = `
+    <section class="section" style="border-top:none;">
+      <div class="page-header">
+        <h2>${titles[state.page]}</h2>
+        <button class="btn btn-ghost btn-sm" id="back-home-btn">← Home</button>
+      </div>
+      <div class="results-grid" id="list-grid">${skeletonCards(8, true)}</div>
+    </section>`;
+  document.getElementById("back-home-btn").onclick = ()=> goToPage("home");
+  loadListPage(state.page);
+}
+async function loadListPage(page){
+  const grid = document.getElementById("list-grid");
+  try{
+    const data = await api(`/api/${page}`);
+    const items = Array.isArray(data) ? data : (data.items || data.movies || []);
+    grid.innerHTML = "";
+    if(!items.length){
+      const meta = {
+        watchlist:  { icon: "＋", title: "Your watchlist is empty",   sub: "Use the ＋ button on any movie card to add it to your watchlist." },
+        favourites: { icon: "♥", title: "No favourites yet",          sub: "Use the ♥ button on any movie card to add it to your favourites." },
+        watched:    { icon: "✓", title: "Nothing watched yet",        sub: "Use the ✓ button on any movie card to mark it as watched." },
+        ratings:    { icon: "★", title: "Nothing rated yet",          sub: "Use the ★ button on any movie card to rate it from 1 to 10." },
+      }[page] || { icon: "🎬", title: "Nothing here yet", sub: "" };
+      grid.innerHTML = `
+        <div class="page-empty">
+          <div class="page-empty-icon">${meta.icon}</div>
+          <div class="page-empty-title">${meta.title}</div>
+          <div class="page-empty-sub">${meta.sub}</div>
+        </div>`;
+      return;
+    }
+    items.forEach(m => grid.appendChild(movieCard(m)));
+  } catch(err){
+    grid.innerHTML = `<div class="empty-note">Could not load this: ${err.message}</div>`;
+  }
+}
+
+// ---------- results page ----------
+function resultsTemplate(){
+  const r = state.results || {};
+  const isMulti = r.type === "multi";
+  const headerTitle = r.type === "single" ? `Recommendations for “${r.title}”` : "Combined Recommendations";
+  const multiPickerHtml = isMulti ? `
+    <div class="multi-input-strip" style="text-align:center;">
+      <div class="panel-hint" style="margin-bottom:14px;">You can change these movies and get new recommendations - remove one, add another, whatever you like.</div>
+      <div class="picker" id="picker"></div>
+      <button class="btn btn-accent" id="multi-btn" disabled style="opacity:.4; padding:10px 32px;">Get New Recommendations</button>
+    </div>` : "";
+  // The "search another movie" bar from single-movie results would be redundant here -
+  // the picker above already lets you swap movies in and out and get fresh recommendations.
+  const singleSearchHtml = !isMulti ? `
+    <div class="search-panel rec-search-panel">
+      <div class="search-row">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="results-search-input" placeholder="Search another movie..." autocomplete="off">
+        <button class="btn btn-accent" id="results-search-btn">Recommend</button>
+        <div id="results-autocomplete"></div>
+      </div>
+    </div>` : "";
+  return `
+  <section class="section" style="border-top:none;">
+    <div class="page-header">
+      <h2>${headerTitle}</h2>
+      <button class="btn btn-ghost btn-sm" id="back-home-btn">← Home</button>
+    </div>
+    ${multiPickerHtml}
+    ${singleSearchHtml}
+    <div class="searched-hero" id="searched-hero" style="display:none;"></div>
+    <div class="results-toolbar">
+      <div class="section-sub" id="results-count"></div>
+      ${isMulti ? "" : `<button class="btn btn-ghost btn-sm" id="requery-btn">↻ Get New Recommendations</button>`}
+    </div>
+    <div class="rec-list" id="results-grid"></div>
+  </section>`;
+}
+function bindResultsEvents(){
+  document.getElementById("back-home-btn").onclick = ()=> goToPage("home");
+  const requeryBtn = document.getElementById("requery-btn");
+  if(requeryBtn) requeryBtn.onclick = rerunResults;
+  const resultsBtn = document.getElementById("results-search-btn");
+  if(resultsBtn) resultsBtn.onclick = ()=> runResultsSearch();
+  const resultsInput = document.getElementById("results-search-input");
+  if(resultsInput){
+    resultsInput.addEventListener("keydown", e=>{
+      if(e.key !== "Enter") return;
+      const ac = document.getElementById("results-autocomplete");
+      if(ac && ac.classList.contains("open") && ac._items && ac._items.length){
+        const best = ac._items[0];
+        closeResultsAutocomplete();
+        runResultsSearch(best);
+        return;
+      }
+      closeResultsAutocomplete();
+      runResultsSearch();
+    });
+    resultsInput.addEventListener("input", onResultsSearchInput);
+  }
+  if(state.results && state.results.type === "multi"){
+    renderPicker();
+    document.getElementById("multi-btn").onclick = ()=> runMultiSearch();
+  }
+  if(state.results && state.results.searchedMovie){
+    renderSearchedHero(state.results.searchedMovie);
+  }
+  renderResultsGrid();
+}
+function renderResultsGrid(){
+  const grid = document.getElementById("results-grid");
+  const countEl = document.getElementById("results-count");
+  if(!grid) return;
+  const movies = (state.results && state.results.movies) || [];
+  if(countEl) countEl.textContent = movies.length ? `${movies.length} recommendations - sorted by rating` : "";
+  grid.innerHTML = "";
+  if(!movies.length){ grid.innerHTML = '<div class="empty-note">No results found.</div>'; return; }
+  movies.forEach((m, i) => grid.appendChild(recCard(m, i+1)));
+}
+async function rerunResults(){
+  if(!state.results) return;
+  const btn = document.getElementById("requery-btn");
+  if(btn){ btn.disabled = true; btn.textContent = "↺ Loading..."; }
+  try{
+    let pool = state.results.pool;
+    if(!pool || !pool.length){
+      // no pool yet (e.g. an older/incomplete state) - fetch a fresh one from the API
+      let movies;
+      if(state.results.type === "single"){
+        movies = await api(`/api/recommend?title=${encodeURIComponent(state.results.title)}&top_n=60`);
+      } else {
+        movies = await api("/api/recommend_multi", {
+          method:"POST",
+          body: JSON.stringify({ titles: state.results.titles, top_n: 60 })
+        });
+      }
+      pool = sortByRating(movies);
+      state.results.pool = pool;
+      state.results.queue = null;
+    }
+    state.results.movies = sortByRating(nextBatch(state.results, 10));
+    renderResultsGrid();
+    toast("Recommendations refreshed.");
+  } catch(err){
+    toast(err.message);
+  } finally {
+    if(btn){ btn.disabled = false; btn.textContent = "↻ Get New Recommendations"; }
+  }
+}
+
+// ---------- homepage template ----------
+function homeTemplate(){
+  return `
+  <section class="hero">
+    <div class="eyebrow">What should you watch tonight?</div>
+    <h1>Tell me a movie,<br>I will find its match.</h1>
+    <p>A hybrid recommendation engine built on content and ratings - tell it what you love, and it will find you more like it.</p>
+  </section>
+
+  <section class="section" id="search-section" style="border-top:none; padding-top:0;">
+    <div class="search-panel">
+      <div class="segmented" id="segmented">
+        <button class="seg-btn active" id="tab-single" data-tab="single">Single Movie</button>
+        <button class="seg-btn" id="tab-multi" data-tab="multi">Multiple Movies</button>
+        <div class="seg-thumb" id="seg-thumb"></div>
+      </div>
+
+      <div class="tab-panel" id="panel-single">
+        <p class="panel-hint">Type the name of a movie you love, and we will find you more like it.</p>
+        <div class="search-row">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="single-input" placeholder="e.g. Inception" autocomplete="off">
+          <button class="btn btn-accent" id="single-btn">Recommend</button>
+          <div id="autocomplete"></div>
+        </div>
+      </div>
+
+      <div class="tab-panel" id="panel-multi" style="display:none;">
+        <p class="panel-hint">Click a card and type a movie name - add at least 2 to activate "Recommend".</p>
+        <div class="picker" id="picker"></div>
+        <button class="btn btn-accent btn-wide" id="multi-btn" disabled style="opacity:.4;">Recommend</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="popular-section">
+    <div class="section-head">
+      <div>
+        <h2><span class="num">Trending</span> Today</h2>
+        <div class="section-sub">The movies everyone's talking about on TMDB right now</div>
+      </div>
+    </div>
+    <div class="row-scroll" id="popular-row">
+      ${skeletonCards(6, false)}
+    </div>
+  </section>
+
+  ${state.user ? `
+  <section class="section" id="home-favourites-section">
+    <div class="section-head">
+      <div>
+        <h2><span class="num">Your</span> Favourites</h2>
+        <div class="section-sub">Pick a few movies you love, and we will fine-tune your recommendations around them</div>
+      </div>
+    </div>
+    <div class="row-scroll" id="home-fav-picker"></div>
+  </section>
+  ` : ""}`;
+}
+
+function bindHomeEvents(){
+  renderPicker();
+  if(state.user) renderFavouritesStrip();
+
+  document.getElementById("single-btn").onclick = ()=> runSingleSearch();
+  const singleInput = document.getElementById("single-input");
+  singleInput.addEventListener("keydown", e=>{
+    if(e.key !== "Enter") return;
+    // If the autocomplete dropdown is open, Enter should pick its first (most relevant)
+    // suggestion instead of whatever partial text the user has typed so far - /api/recommend
+    // needs an exact title match, so searching with half a word used to just say "not found".
+    const ac = document.getElementById("autocomplete");
+    if(ac && ac.classList.contains("open") && ac._items && ac._items.length){
+      const best = ac._items[0];
+      closeAutocomplete();
+      runSingleSearch(best);
+      return;
+    }
+    closeAutocomplete();
+    runSingleSearch();
+  });
+  singleInput.addEventListener("input", onSearchInput);
+
+  document.getElementById("multi-btn").onclick = ()=> runMultiSearch();
+  document.getElementById("tab-single").onclick = ()=> switchTab("single");
+  document.getElementById("tab-multi").onclick = ()=> switchTab("multi");
+}
+
+// ---------- autocomplete ----------
+let acDebounce = null;
+let acRequestId = 0;
+function onSearchInput(){
+  clearTimeout(acDebounce);
+  acDebounce = setTimeout(fetchAutocomplete, 180);
+}
+async function fetchAutocomplete(){
+  const inp = document.getElementById("single-input");
+  if(!inp) return;
+  const q = inp.value.trim();
+  if(q.length < 2){ closeAutocomplete(); return; }
+  const myRequestId = ++acRequestId;
+  const items = await apiSafe(`/api/search?q=${encodeURIComponent(q)}`);
+  // If a newer request has started since this one (the user kept typing), ignore this late response.
+  if(myRequestId !== acRequestId) return;
+  const list = Array.isArray(items) ? items : (items.items || []);
+  if(!list.length){ closeAutocomplete(); return; }
+  renderAutocomplete(list);
+}
+function renderAutocomplete(items){
+  const ac = document.getElementById("autocomplete");
+  if(!ac) return;
+  ac.innerHTML = items.slice(0,8).map((item,idx)=>{
+    const rating = item.display_rating ?? item.vote_avg;
+    return `<div class="ac-item" data-idx="${idx}">
+      <img src="${poster(item.poster_path)}" onerror="this.style.visibility='hidden'">
+      <div>
+        <div class="ac-title">${item.title}</div>
+        ${item.genres ? `<div class="ac-sub">${String(item.genres).split(",").slice(0,2).join(" · ")}</div>` : ""}
+      </div>
+      ${rating ? `<div class="ac-score">★ ${Number(rating).toFixed(1)}</div>` : ""}
+    </div>`;
+  }).join("");
+  ac._items = items;
+  ac.onclick = (e)=>{
+    const row = e.target.closest("[data-idx]");
+    if(!row) return;
+    const item = ac._items[parseInt(row.dataset.idx,10)];
+    document.getElementById("single-input").value = item.title;
+    closeAutocomplete();
+    runSingleSearch(item);
+  };
+  ac.classList.add("open");
+}
+function closeAutocomplete(){
+  const ac = document.getElementById("autocomplete");
+  if(ac){ ac.classList.remove("open"); ac.innerHTML = ""; }
+}
+
+// ---------- trending movies ----------
+async function loadPopular(){
+  const row = document.getElementById("popular-row");
+  try{
+    const movies = await api("/api/popular");
+    row.innerHTML = "";
+    if(!movies.length){ row.innerHTML = '<div class="empty-note">No trending movies have been fetched for today yet.</div>'; return; }
+    movies.forEach(m => row.appendChild(movieCard(m)));
+  } catch(err){
+    row.innerHTML = `<div class="empty-note">Could not load trending movies: ${err.message}</div>`;
+  }
+}
+
+// ---------- single-movie search ----------
+function sortByRating(movies){
+  return [...movies].sort((a,b)=>{
+    const ra = Number(a.display_rating ?? a.vote_avg ?? 0);
+    const rb = Number(b.display_rating ?? b.vote_avg ?? 0);
+    return rb - ra;
+  });
+}
+function shuffle(arr){
+  const a = [...arr];
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+// Pulls the next batch from a shuffled queue built from the recommendation pool - once the
+// queue runs out it is reshuffled from scratch, so "get new recommendations" comes back in a
+// different order every time, and even with a small pool it feels less like the same 3
+// batches looping over and over.
+function nextBatch(results, size){
+  if(!results.queue || results.queue.length === 0){
+    results.queue = shuffle(results.pool);
+  }
+  const batch = results.queue.splice(0, size);
+  return batch;
+}
+async function performSingleSearch(title, preMovie){
+  if(!title){ toast("Type a movie title."); return; }
+  // Where the delay used to come from: these three requests fired one after another -
+  // /api/search, then /api/recommend, then (if the overview was missing) /api/movie/<id>.
+  // Each one is a separate network round trip, so the total wait was the sum of all three.
+  // Below, we kick off the first two in PARALLEL (they do not depend on each other), and run
+  // the third in the background without blocking the page, updating the card once it arrives.
+  const searchPromise = preMovie ? Promise.resolve(null) : apiSafe(`/api/search?q=${encodeURIComponent(title)}`);
+  const moviesPromise = api(`/api/recommend?title=${encodeURIComponent(title)}&top_n=60`);
+  const [items, movies] = await Promise.all([searchPromise, moviesPromise]);
+  if(!movies.length){ toast("Could not find that movie - make sure the title is spelled correctly."); return; }
+
+  let movieInfo = preMovie || null;
+  if(!movieInfo){
+    // for searches that skipped autocomplete, look up the matching movie to get its poster/rating
+    const list = Array.isArray(items) ? items : (items.items || []);
+    movieInfo = list.find(it => it.title.toLowerCase() === title.toLowerCase()) || list[0] || null;
+  }
+  // /api/search only returns lightweight fields (poster/rating), no overview or cast - if this
+  // same movie happens to already be in the recommendation results we just fetched, fill the
+  // details in from there first, at no extra request cost.
+  if(movieInfo && !movieInfo.overview){
+    const matchInList = movies.find(m => m.title.toLowerCase() === title.toLowerCase());
+    if(matchInList) movieInfo = { ...movieInfo, ...matchInList };
+  }
+
+  const pool = sortByRating(movies);
+  const results = { type:"single", title, titles:[title], searchedMovie: movieInfo, pool, queue: null };
+  results.movies = sortByRating(nextBatch(results, 10));
+  state.results = results;
+  state.page = "results";
+  renderCurrentPage();
+
+  // If the overview is still missing, fetch the full details in the background (without making the page wait) and update the card once it arrives.
+  if(movieInfo && movieInfo.id && !movieInfo.overview){
+    const targetId = movieInfo.id;
+    apiSafe(`/api/movie/${targetId}`, {}, null).then(full=>{
+      if(!full || (!full.overview && !full.title)) return;
+      if(state.page === "results" && state.results && state.results.searchedMovie && state.results.searchedMovie.id === targetId){
+        state.results.searchedMovie = { ...state.results.searchedMovie, ...full };
+        renderSearchedHero(state.results.searchedMovie);
+      }
+    });
+  }
+}
+async function runSingleSearch(preMovie){
+  const inputEl = document.getElementById("single-input");
+  const title = (preMovie ? preMovie.title : inputEl.value.trim());
+  if(!title){ toast("Type a movie title."); return; }
+  closeAutocomplete();
+  const btn = document.getElementById("single-btn");
+  if(btn){ btn.disabled = true; btn.textContent = "Searching..."; }
+  try{
+    await performSingleSearch(title, preMovie);
+  } catch(err){
+    toast(err.message);
+  } finally {
+    if(btn){ btn.disabled = false; btn.textContent = "Recommend"; }
+  }
+}
+// ---------- autocomplete for the results-page search bar (same behaviour as the homepage one) ----------
+let resultsAcDebounce = null;
+let resultsAcRequestId = 0;
+function onResultsSearchInput(){
+  clearTimeout(resultsAcDebounce);
+  resultsAcDebounce = setTimeout(fetchResultsAutocomplete, 180);
+}
+async function fetchResultsAutocomplete(){
+  const inp = document.getElementById("results-search-input");
+  if(!inp) return;
+  const q = inp.value.trim();
+  if(q.length < 2){ closeResultsAutocomplete(); return; }
+  const myRequestId = ++resultsAcRequestId;
+  const items = await apiSafe(`/api/search?q=${encodeURIComponent(q)}`);
+  if(myRequestId !== resultsAcRequestId) return;
+  const list = Array.isArray(items) ? items : (items.items || []);
+  if(!list.length){ closeResultsAutocomplete(); return; }
+  renderResultsAutocomplete(list);
+}
+function renderResultsAutocomplete(items){
+  const ac = document.getElementById("results-autocomplete");
+  if(!ac) return;
+  ac.innerHTML = items.slice(0,8).map((item,idx)=>{
+    const rating = item.display_rating ?? item.vote_avg;
+    return `<div class="ac-item" data-idx="${idx}">
+      <img src="${poster(item.poster_path)}" onerror="this.style.visibility='hidden'">
+      <div>
+        <div class="ac-title">${item.title}</div>
+        ${item.genres ? `<div class="ac-sub">${String(item.genres).split(",").slice(0,2).join(" · ")}</div>` : ""}
+      </div>
+      ${rating ? `<div class="ac-score">★ ${Number(rating).toFixed(1)}</div>` : ""}
+    </div>`;
+  }).join("");
+  ac._items = items;
+  ac.onclick = (e)=>{
+    const row = e.target.closest("[data-idx]");
+    if(!row) return;
+    const item = ac._items[parseInt(row.dataset.idx,10)];
+    document.getElementById("results-search-input").value = item.title;
+    closeResultsAutocomplete();
+    runResultsSearch(item);
+  };
+  ac.classList.add("open");
+}
+function closeResultsAutocomplete(){
+  const ac = document.getElementById("results-autocomplete");
+  if(ac){ ac.classList.remove("open"); ac.innerHTML = ""; }
+}
+async function runResultsSearch(preMovie){
+  const inputEl = document.getElementById("results-search-input");
+  const title = preMovie ? preMovie.title : inputEl.value.trim();
+  if(!title){ toast("Type a movie title."); return; }
+  closeResultsAutocomplete();
+  const btn = document.getElementById("results-search-btn");
+  if(btn){ btn.disabled = true; btn.textContent = "Searching..."; }
+  try{
+    await performSingleSearch(title, preMovie);
+  } catch(err){
+    toast(err.message);
+  } finally {
+    const btn2 = document.getElementById("results-search-btn");
+    if(btn2){ btn2.disabled = false; btn2.textContent = "Recommend"; }
+  }
+}
+function renderSearchedHero(movie){
+  const hero = document.getElementById("searched-hero");
+  if(!hero) return;
+  const rating = movie.display_rating ?? movie.vote_avg;
+  const userRating = movie.user_rating ?? movie.rating ?? state.ratings.get(movie.id);
+  const genres = (movie.genres ? String(movie.genres).split(",") : []).filter(Boolean).slice(0,4);
+  hero.className = "searched-hero rec-card rec-card-featured";
+  hero.innerHTML = `
+    <div class="rec-poster">
+      <img src="${poster(movie.poster_path,'lg')}" alt="${movie.title}">
+      ${userRating ? `<div class="user-rating-badge" title="Your rating: ${userRating}/10">${userRating}</div>` : ""}
+    </div>
+    <div class="rec-score">
+      <div class="rec-score-label">TMDB</div>
+      <div class="rec-score-star">★</div>
+      <div class="rec-score-val">${rating ? Number(rating).toFixed(1) : "–"}</div>
+      <div class="rec-score-denom">/ 10</div>
+    </div>
+    <div class="rec-body">
+      <span class="hero-badge">🎬 Your search</span>
+      <div class="rec-title">${movie.title}</div>
+      ${genres.length ? `<div class="rec-genres">${genres.map(g=>`<span class="genre-tag">${g.trim()}</span>`).join("")}</div>` : ""}
+      ${movie.directors ? `<div class="rec-crew"><strong>Director</strong>${movie.directors}</div>` : ""}
+      ${movie.cast ? `<div class="rec-crew"><strong>Cast</strong>${String(movie.cast).split(",").slice(0,4).join(", ")}</div>` : ""}
+      ${movie.overview ? `<div class="rec-overview rec-overview-lg">${movie.overview}</div>` : ""}
+      <div class="rec-actions" data-movie-id="${movie.id}">
+        <div class="icon-btn ${state.favourites.has(movie.id)?'active':''}" data-action="favourites" title="Add to favourites">♥</div>
+        <div class="icon-btn ${state.watchlist.has(movie.id)?'active':''}" data-action="watchlist" title="Add to watchlist">＋</div>
+        <div class="icon-btn ${state.watched.has(movie.id)?'active':''}" data-action="watched" title="Mark as watched">✓</div>
+        <div class="icon-btn ${state.ratings.has(movie.id)?'active':''}" data-action="rate" title="Rate this">★</div>
+      </div>
+      <div class="rec-hint">↗ Click for details</div>
+    </div>`;
+  hero.style.display = "flex";
+  hero.querySelectorAll(".icon-btn").forEach(btn=>{
+    btn.onclick = (e)=>{
+      e.stopPropagation();
+      if(btn.dataset.action === "rate") openRatingModal(movie);
+      else handleCardAction(movie, btn);
+    };
+  });
+  hero.onclick = ()=> openDetail(movie);
+}
+function clearSearchedHero(){
+  const hero = document.getElementById("searched-hero");
+  if(!hero) return;
+  hero.innerHTML = "";
+  hero.style.display = "none";
+}
+
+// ---------- multi-movie search: the 5-slot picker ----------
+let slotAcDebounce = null;
+function renderPicker(){
+  const picker = document.getElementById("picker");
+  if(!picker) return;
+  picker.innerHTML = "";
+  state.slots.forEach((value, i)=>{
+    const slot = document.createElement("div");
+    slot.className = "slot" + (value ? " filled" : "");
+    if(value){
+      slot.innerHTML = `
+        <img class="slot-poster" src="${poster(value.poster_path)}" alt="${value.title}">
+        <div class="remove">✕</div>
+        <div class="slot-cap">${value.title}</div>`;
+      slot.querySelector(".remove").onclick = (e)=>{
+        e.stopPropagation();
+        state.slots[i] = null;
+        renderPicker();
+      };
+    } else {
+      slot.innerHTML = `<div class="plus">＋</div><div style="font-size:11px;color:var(--text-dim)">add a movie</div>`;
+      slot.onclick = ()=> openSlotSearch(i);
+    }
+    picker.appendChild(slot);
+  });
+  const filledCount = state.slots.filter(Boolean).length;
+  const btn = document.getElementById("multi-btn");
+  if(!btn) return;
+  const ready = filledCount >= 2;
+  btn.disabled = !ready;
+  btn.style.opacity = ready ? "1" : ".4";
+}
+
+// ---------- homepage favourites strip (Letterboxd-style, 5 slots) ----------
+function renderFavouritesStrip(){
+  const row = document.getElementById("home-fav-picker");
+  if(!row) return; // this section is not even in the DOM if the user is not logged in
+  row.innerHTML = "";
+  state.favouriteMovies.forEach(movie=>{
+    row.appendChild(favouriteCard(movie));
+  });
+  if(state.favouriteMovies.length < 5){
+    row.appendChild(favouriteAddTile());
+  }
+}
+// A plain card for the favourites strip: just the poster (plus a rating badge top-left if
+// rated) - no title, no score, no action bar. Hovering reveals a ✕ top-right to remove it.
+function favouriteCard(movie){
+  const div = document.createElement("div");
+  div.className = "card fav-card-mini";
+  const userRating = movie.user_rating ?? movie.rating ?? state.ratings.get(movie.id);
+  div.innerHTML = `
+    <img class="poster" src="${poster(movie.poster_path)}" alt="${movie.title}" loading="lazy">
+    ${userRating ? `<div class="user-rating-badge" title="Your rating: ${userRating}/10">${userRating}</div>` : ""}
+    <div class="remove fav-remove" title="Remove from favourites">✕</div>`;
+  div.querySelector(".fav-remove").onclick = async (e)=>{
+    e.stopPropagation();
+    try{
+      await api(`/api/favourites/${movie.id}`, { method:"DELETE" });
+      state.favourites.delete(movie.id);
+      state.favouriteMovies = state.favouriteMovies.filter(m => m.id !== movie.id);
+      renderFavouritesStrip();
+      syncActionButtonsForMovie(movie.id);
+      toast("Removed from favourites.");
+    } catch(err){ toast(err.message); }
+  };
+  div.addEventListener("click", ()=> openDetail(movie));
+  return div;
+}
+function favouriteAddTile(){
+  const div = document.createElement("div");
+  div.className = "card fav-add-tile";
+  const label = state.favouriteMovies.length === 0 ? "Add your first favourite" : "Add a favourite";
+  div.innerHTML = `<div class="plus">＋</div><span>${label}</span>`;
+  div.onclick = ()=> openSlotSearch(null, "favourites");
+  return div;
+}
+let currentSlotIndex = null;
+let slotSearchMode = "multi"; // "multi" | "favourites"
+function openSlotSearch(i, mode){
+  currentSlotIndex = i;
+  slotSearchMode = mode || "multi";
+  const overlay = document.getElementById("slot-search-overlay");
+  const input = document.getElementById("slot-search-input");
+  const results = document.getElementById("slot-search-results");
+  results.innerHTML = "";
+  input.value = "";
+  overlay.classList.add("open");
+  setTimeout(()=> input.focus(), 50);
+}
+function closeSlotSearch(){
+  document.getElementById("slot-search-overlay").classList.remove("open");
+  currentSlotIndex = null;
+}
+let slotSearchRequestId = 0;
+async function fetchSlotSearchResults(){
+  const input = document.getElementById("slot-search-input");
+  const results = document.getElementById("slot-search-results");
+  const q = input.value.trim();
+  if(q.length < 2){ results.innerHTML = ""; return; }
+  const myRequestId = ++slotSearchRequestId;
+  const items = await apiSafe(`/api/search?q=${encodeURIComponent(q)}`);
+  // If a newer request has started since this one (the user kept typing), ignore this late
+  // response - otherwise a race condition could leave stale results (or a false "not found") on screen.
+  if(myRequestId !== slotSearchRequestId) return;
+  const list = Array.isArray(items) ? items : (items.items || []);
+  if(!list.length){ results.innerHTML = '<div class="empty-note">No results found.</div>'; return; }
+  results.innerHTML = list.slice(0,8).map((item, idx)=>{
+    const rating = item.display_rating ?? item.vote_avg;
+    return `<div class="ac-item" data-idx="${idx}">
+      <img src="${poster(item.poster_path)}" onerror="this.style.visibility='hidden'">
+      <div>
+        <div class="ac-title">${item.title}</div>
+        ${item.genres ? `<div class="ac-sub">${String(item.genres).split(",").slice(0,2).join(" · ")}</div>` : ""}
+      </div>
+      ${rating ? `<div class="ac-score">★ ${Number(rating).toFixed(1)}</div>` : ""}
+    </div>`;
+  }).join("");
+  results._items = list;
+}
+function setupSlotSearchModal(){
+  const overlay = document.getElementById("slot-search-overlay");
+  const input = document.getElementById("slot-search-input");
+  const results = document.getElementById("slot-search-results");
+  const closeBtn = document.getElementById("slot-search-close");
+  closeBtn.onclick = closeSlotSearch;
+  overlay.addEventListener("click", (e)=>{ if(e.target === overlay) closeSlotSearch(); });
+  input.addEventListener("input", ()=>{
+    clearTimeout(slotAcDebounce);
+    // On every keystroke, before the 180ms debounce even fires, we immediately show "Searching..."
+    // so the PREVIOUS search's stale result (including "No results found") never lingers on screen.
+    // Otherwise, while typing fast, the user would briefly see "not found" for text that had not
+    // actually been searched for yet - which is misleading.
+    const q = document.getElementById("slot-search-input").value.trim();
+    results.innerHTML = q.length >= 2 ? '<div class="empty-note">Searching...</div>' : "";
+    slotAcDebounce = setTimeout(fetchSlotSearchResults, 180);
+  });
+  input.addEventListener("keydown", e=>{
+    if(e.key === "Escape") closeSlotSearch();
+  });
+  results.onclick = (e)=>{
+    const row = e.target.closest("[data-idx]");
+    if(!row) return;
+    // In "favourites" mode there is no fixed slot index (openSlotSearch(null, "favourites")
+    // deliberately passes null) - so we only enforce the null check in "multi" mode.
+    if(slotSearchMode !== "favourites" && currentSlotIndex === null) return;
+    const item = results._items[parseInt(row.dataset.idx,10)];
+    if(slotSearchMode === "favourites"){
+      addFavouriteToSlot(item);
+      return;
+    }
+    state.slots[currentSlotIndex] = { id: item.id, title: item.title, poster_path: item.poster_path };
+    closeSlotSearch();
+    renderPicker();
+  };
+}
+async function addFavouriteToSlot(item){
+  if(state.favourites.size >= FAVOURITES_LIMIT && !state.favourites.has(item.id)){
+    toast("Your favourites list is full - remove one first.");
+    return;
+  }
+  // Close the modal and show the movie in the strip IMMEDIATELY (optimistic UI) instead of
+  // waiting for the network round trip. This used to await the POST request (and sometimes a
+  // second request for movie details) before doing anything visible at all, which is exactly
+  // what made this button feel slow - see handleCardAction() above for the same pattern
+  // applied to every other add/remove button in the app.
+  closeSlotSearch();
+  state.favourites.add(item.id);
+  const idx = state.favouriteMovies.findIndex(m => m.id === item.id);
+  if(idx === -1) state.favouriteMovies.push(item);
+  else state.favouriteMovies[idx] = item;
+  renderFavouritesStrip();
+  syncActionButtonsForMovie(item.id);
+
+  try{
+    await api(`/api/favourites/${item.id}`, { method:"POST" });
+    toast("Added to favourites.");
+    // `item` here comes from /api/search, which only returns lightweight fields
+    // (title/poster/rating) - no overview, director or cast. Fill those in quietly in the
+    // background, once the movie is already visible on screen, so the detail view has
+    // something to show without making the user wait for it up front.
+    if(!item.overview){
+      const detail = await apiSafe(`/api/movie/${item.id}`, {}, null);
+      if(detail && (detail.overview || detail.directors || detail.cast)){
+        const fullIdx = state.favouriteMovies.findIndex(m => m.id === item.id);
+        if(fullIdx !== -1) state.favouriteMovies[fullIdx] = { ...item, ...detail };
+      }
+    }
+  } catch(err){
+    // The request actually failed (e.g. the list filled up in the meantime) - undo the
+    // optimistic update so the UI matches reality again.
+    state.favourites.delete(item.id);
+    state.favouriteMovies = state.favouriteMovies.filter(m => m.id !== item.id);
+    renderFavouritesStrip();
+    syncActionButtonsForMovie(item.id);
+    toast(err.message);
+  }
+}
+async function runMultiSearch(){
+  const titles = state.slots.filter(Boolean).map(s => s.title);
+  const btn = document.getElementById("multi-btn");
+  const originalLabel = btn ? btn.textContent : "Recommend";
+  if(btn){ btn.disabled = true; btn.textContent = "Searching..."; }
+  let navigated = false;
+  try{
+    const movies = await api("/api/recommend_multi", {
+      method:"POST",
+      body: JSON.stringify({ titles, top_n: 60 })
+    });
+    if(!movies.length){ toast("No results found - double-check the movie titles."); return; }
+    const pool = sortByRating(movies);
+    const results = { type:"multi", title: titles.join(", "), titles, searchedMovie:null, pool, queue: null };
+    results.movies = sortByRating(nextBatch(results, 10));
+    state.results = results;
+    state.page = "results";
+    renderCurrentPage(); // the page just re-rendered, so #multi-btn is now a BRAND NEW element with its own correct label (Recommend / Get New Recommendations)
+    navigated = true;
+  } catch(err){
+    toast(err.message);
+  } finally {
+    // On a successful navigation, never overwrite the label of that BRAND NEW button (which
+    // already has its own correct label for whatever page we landed on) with this page's old
+    // label - only restore the old label if we stayed on the same page (an error or empty result).
+    const btnAfter = document.getElementById("multi-btn");
+    if(btnAfter){
+      btnAfter.disabled = false;
+      if(!navigated) btnAfter.textContent = originalLabel;
+      renderPicker();
+    }
+  }
+}
+
+// ---------- sekmeler ----------
+function switchTab(tab){
+  const isSingle = tab === "single";
+  document.getElementById("tab-single").classList.toggle("active", isSingle);
+  document.getElementById("tab-multi").classList.toggle("active", !isSingle);
+  document.getElementById("panel-single").style.display = isSingle ? "block" : "none";
+  document.getElementById("panel-multi").style.display = isSingle ? "none" : "block";
+  document.getElementById("seg-thumb").style.transform = isSingle ? "translateX(0)" : "translateX(100%)";
+}
+
+// ---------- boot ----------
+setupSlotSearchModal();
+renderAuth();
+checkSession().then(renderCurrentPage);
+renderCurrentPage();
+</script>
+</body>
+</html>
