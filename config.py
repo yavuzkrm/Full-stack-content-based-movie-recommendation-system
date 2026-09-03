@@ -25,9 +25,8 @@ DB_CONFIG = {
 }
 
 # Flask uses this to sign session cookies (keeps login sessions tamper-proof).
-# The fallback string is only there so the app doesn't crash if you forget to
-# set one — for a real deployment, always set SECRET_KEY in your .env file.
-SECRET_KEY = os.getenv("SECRET_KEY", "change_this_secret")
+# SECRET_KEY must be set in the environment, especially in production.
+SECRET_KEY = os.environ["SECRET_KEY"]
 
 # A connection pool keeps a handful of MySQL connections open and ready to reuse,
 # instead of opening a brand new connection (which is slow — it involves a TCP
