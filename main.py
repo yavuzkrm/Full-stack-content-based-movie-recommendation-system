@@ -208,8 +208,8 @@ def recommend_movies_multi():
         top_n = int(top_n)
     except (TypeError, ValueError):
         return jsonify({"error": "'top_n' must be a whole number."}), 400
-    if not (1 <= top_n <= 50):
-        return jsonify({"error": "'top_n' must be between 1 and 50."}), 400
+    if not (1 <= top_n <= 200):
+        return jsonify({"error": "'top_n' must be between 1 and 200."}), 400
 
     results = recommend_multi(titles, top_n)
     return df_to_json_safe(results), 200
@@ -363,8 +363,24 @@ def api_get_favourites():
 
 # --- Popular today ---------------------------------------------------------
 
+def _only_cache_non_empty(response):
+    """Passed as flask-caching's response_filter: makes sure an EMPTY
+    "Trending Today" response never gets cached for the full 24 hours.
+    Without this, if the very first visitor hits /api/popular before
+    refresh_daily_popular_movies.py has ever populated the `popular_today`
+    table (e.g. right after a fresh deploy, or if that script isn't running
+    yet), that empty result would get cached and every visitor for the next
+    24 hours would see an empty "Trending Today" row — even after the table
+    gets filled in the meantime. Only a non-empty response is worth caching;
+    an empty one should be retried on the next request instead."""
+    try:
+        return response.get_data(as_text=True).strip() not in ("[]", "")
+    except Exception:
+        return True
+
+
 @app.route("/api/popular")
-@cache.cached(timeout=86400)  # cache the response for 24 hours — the trending list only changes once a day anyway (see refresh_popular_movies below), so there's no reason to hit the database on every single visitor
+@cache.cached(timeout=86400, response_filter=_only_cache_non_empty)  # cache the response for 24 hours — the trending list only changes once a day anyway (see refresh_popular_movies below), so there's no reason to hit the database on every single visitor
 def api_get_popular_movies():
     return jsonify(get_popular_movies())
 
