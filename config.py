@@ -9,6 +9,12 @@ import mysql.connector
 
 load_dotenv()  # reads the ".env" file and makes its values available via os.getenv()
 
+# Whether we're running against a real deployment (Railway, etc.) or on
+# someone's own machine. Defaults to "production" (the safe default) unless
+# .env explicitly sets APP_ENV=development — used in main.py to decide
+# whether the login cookie can require HTTPS (see SESSION_COOKIE_SECURE there).
+IS_PRODUCTION = os.getenv("APP_ENV", "production").lower() != "development"
+
 # TMDB (The Movie Database) API key — get a free one at
 # https://www.themoviedb.org/settings/api
 TMDB_API_KEY = os.getenv("TMDB_API_KEY")
