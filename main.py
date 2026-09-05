@@ -3,7 +3,7 @@ from flask import Flask, request, jsonify, render_template, session
 import sys, os
 import pandas as pd
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-from config import SECRET_KEY
+from config import SECRET_KEY, IS_PRODUCTION
 from user.auth import (register_user, login_user, save_rating,
                        delete_rating, delete_account, add_to_watchlist,
                        remove_from_watchlist, get_watchlist, get_rated_movies, add_to_watched,
@@ -12,10 +12,41 @@ from user.auth import (register_user, login_user, save_rating,
 from recommend.engine import load_data, recommend, recommend_multi, get_data_and_matrix
 from data.fetch_daily_popular_movies import get_popular_movies
 from flask_caching import Cache
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 
 app = Flask(__name__)
 cache = Cache(app, config={'CACHE_TYPE': 'SimpleCache'})
 app.secret_key = SECRET_KEY
+
+# Harden the login-session cookie now that this runs behind HTTPS in
+# production (Railway terminates TLS in front of the app):
+#   SECURE    -> the cookie is only ever sent back over HTTPS, never plain HTTP
+#   HTTPONLY  -> JavaScript can't read the cookie, which limits what a stored-XSS
+#                bug (if one ever slipped through) could do with it
+#   SAMESITE  -> "Lax" blocks the cookie being sent along on cross-site requests
+#                (e.g. a malicious page on another domain), while still allowing
+#                normal same-site navigation/links to work
+# SESSION_COOKIE_SECURE is only turned on in production: if it were always
+# True, the login cookie would silently stop working for anyone running the
+# app locally over plain http://localhost (browsers refuse to send a
+# "Secure" cookie back over an insecure connection). See IS_PRODUCTION in
+# config.py / APP_ENV in .env.example.
+app.config.update(
+    SESSION_COOKIE_SECURE=IS_PRODUCTION,
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE="Lax",
+)
+
+# Rate limiting: keyed by IP address, with generous app-wide defaults and a
+# much stricter limit applied just to /api/login and /api/register below
+# (see their @limiter.limit(...) decorators) — that's what actually matters
+# for stopping someone from hammering the login form to guess passwords.
+# storage_uri defaults to in-memory, which is fine for a single web process;
+# if this app ever runs with multiple gunicorn workers or instances, point
+# storage_uri at a shared Redis instance instead so the limit is shared
+# across all of them.
+limiter = Limiter(app=app, key_func=get_remote_address, default_limits=["200 per hour"])
 
 # A user can only keep 5 movies in their favourites at once — this keeps the
 # favourites strip on the homepage small and meaningful instead of turning
@@ -77,6 +108,7 @@ def index():
 # --- Auth ---------------------------------------------------------------------
 
 @app.route("/api/register", methods=["POST"])
+@limiter.limit("10 per hour")  # slows down someone trying to script mass account creation
 def register():
     data = request.json or {}
     username = data.get("username")
@@ -92,6 +124,7 @@ def register():
 
 
 @app.route("/api/login", methods=["POST"])
+@limiter.limit("10 per minute")  # the key defence against brute-forcing a password
 def login():
     data = request.json or {}
     username = data.get("username")
@@ -144,6 +177,8 @@ def delete():
 @app.route("/api/recommend")
 def recommend_movies():
     title = request.args.get("title")
+    # type=int already makes Flask return a clean 400 by itself if "top_n"
+    # isn't a valid integer, so no extra validation needed here.
     top_n = request.args.get("top_n", default=10, type=int)
 
     if not title:
@@ -161,6 +196,20 @@ def recommend_movies_multi():
 
     if not titles or not isinstance(titles, list) or not (2 <= len(titles) <= 5):
         return jsonify({"error": "'titles' must be a list of 2 to 5 movie titles."}), 400
+
+    # Unlike /api/recommend above, this "top_n" comes from a JSON body instead
+    # of Flask's own type-checked query-string parsing, so it could be
+    # anything a caller puts in the request (a string, a float, a list...).
+    # engine.py does `top_n * 5` internally, which would either misbehave
+    # (e.g. silently repeat a string instead of multiplying a number) or
+    # throw a TypeError deep inside the recommendation engine — catching a
+    # bad value here instead keeps that a clean, obvious 400.
+    try:
+        top_n = int(top_n)
+    except (TypeError, ValueError):
+        return jsonify({"error": "'top_n' must be a whole number."}), 400
+    if not (1 <= top_n <= 50):
+        return jsonify({"error": "'top_n' must be between 1 and 50."}), 400
 
     results = recommend_multi(titles, top_n)
     return df_to_json_safe(results), 200
@@ -211,7 +260,15 @@ def api_get_movie(movie_id):
 def api_save_rating(movie_id):
     data = request.json or {}
     rating = data.get("rating")
-    if rating is None or not (1 <= float(rating) <= 10):
+    try:
+        # Someone could POST a rating that isn't even a number (e.g. a typo'd
+        # string, or a hand-crafted request) — float() throws a ValueError in
+        # that case, which we turn into the same clean 400 response instead
+        # of letting it bubble up into a generic 500.
+        rating = float(rating)
+    except (TypeError, ValueError):
+        return jsonify({"error": "Rating must be a number between 1 and 10."}), 400
+    if not (1 <= rating <= 10):
         return jsonify({"error": "Rating must be between 1 and 10."}), 400
 
     save_rating(session["user_id"], movie_id, rating)
