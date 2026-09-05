@@ -78,8 +78,8 @@ crowd out a genuinely similar one.
 **1. Clone the repo and install dependencies**
 
 ```bash
-git clone https://github.com/yavuzkrm/film-recommendation-system.git
-cd film-recommendation-system
+git clone https://github.com/yavuzkrm/Full-stack-content-based-movie-recommendation-system
+cd Full-stack-content-based-movie-recommendation-system
 python -m venv .venv
 source .venv/bin/activate      # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
