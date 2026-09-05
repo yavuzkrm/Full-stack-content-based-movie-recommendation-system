@@ -393,6 +393,14 @@
   .fav-add-tile{
     border:1.5px dashed var(--line); background: var(--surface); cursor:pointer;
     display:flex; align-items:center; justify-content:center; flex-direction:column; gap:6px;
+    /* Same shape as a poster card (.card .poster is aspect-ratio 2/3) at all times.
+       Without this, the tile only LOOKED poster-sized when a real favourite card sat
+       next to it in the flex row — the flex row's default "stretch" was matching this
+       tile's height to that poster's height by accident. With zero favourites (this
+       tile alone in the row, nothing to stretch to), it collapsed down to fit just its
+       "+" icon and label instead. Setting the ratio directly means it's always the
+       same fixed poster-shaped size, with or without any favourites added yet. */
+    aspect-ratio: 2/3;
   }
   .fav-add-tile:hover{ border-color: var(--accent); }
   .fav-add-tile .plus{ font-size:30px; color: var(--text-dim); font-family:'Bebas Neue',sans-serif; }
