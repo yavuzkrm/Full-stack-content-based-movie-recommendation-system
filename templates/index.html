@@ -741,6 +741,19 @@ const state = {
 };
 
 // ---------- helpers ----------
+// Kullanıcının kendi girdiği herhangi bir metni (şu an için: kullanıcı adı)
+// innerHTML içine gömmeden önce HTML-escape eder. Kayıt sırasında kullanıcı
+// adına hiçbir karakter kısıtlaması olmadığı için, bu adım olmadan biri
+// "<img src=x onerror=...>" gibi bir kullanıcı adıyla kayıt olup kendi
+// tarayıcısında (veya adı bir gün başka bir yerde gösterilirse başkasının
+// tarayıcısında) rastgele HTML/JS çalıştırabilirdi — klasik stored XSS.
+// Film başlığı/özeti gibi TMDB'den gelen veriler bu fonksiyonu kullanmıyor,
+// çünkü onlar kullanıcı girdisi değil, güvenilir bir kaynaktan geliyor.
+function escapeHtml(str){
+  const div = document.createElement("div");
+  div.textContent = str ?? "";
+  return div.innerHTML;
+}
 function toast(msg){
   const t = document.getElementById("toast");
   t.textContent = msg;
@@ -783,8 +796,8 @@ function renderAuth(){
   if(state.user){
     el.innerHTML = `
       <div class="user-chip" id="user-chip">
-        <div class="user-avatar">${state.user.username.charAt(0).toUpperCase()}</div>
-        <span>${state.user.username}</span>
+        <div class="user-avatar">${escapeHtml(state.user.username.charAt(0).toUpperCase())}</div>
+        <span>${escapeHtml(state.user.username)}</span>
         <span class="user-chevron">▾</span>
       </div>
       <div id="dropdown">
