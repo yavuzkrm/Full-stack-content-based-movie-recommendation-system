@@ -114,20 +114,26 @@ python -m data.fetch_movies
 
 **5. Run the app**
 
-For local development:
+`main.py` no longer calls `app.run()` itself (see [Deployment](#deployment)
+below for why) — run it through gunicorn instead, both locally and in
+production:
 
 ```bash
-python main.py
+gunicorn main:app --reload
 ```
 
-Then open **http://localhost:5000** in your browser. The first launch prints
-a short "warming up the recommendation engine" message while it builds the
-similarity model — that's normal, and only happens once per server start.
+(`--reload` restarts the worker automatically whenever a file changes —
+handy for local development; drop it in production.)
+
+Then open **http://localhost:8000** in your browser (gunicorn's default
+port; pass `--bind 0.0.0.0:5000` if you want 5000 instead). The first launch
+prints a short "warming up the recommendation engine" message while it
+builds the similarity model — that's normal, and only happens once per
+worker start.
 
 ## Deployment
 
-In production, the app is served with **gunicorn** instead of Flask's own
-development server:
+In production, run the same command, just without `--reload`:
 
 ```bash
 gunicorn main:app
