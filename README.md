@@ -114,7 +114,7 @@ python -m data.fetch_movies
 
 **5. Run the app**
 
-run it through gunicorn:
+Run it through gunicorn:
 
 ```bash
 gunicorn main:app --reload
