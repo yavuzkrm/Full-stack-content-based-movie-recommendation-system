@@ -41,9 +41,31 @@ def check_password(password):
     return True, "Password is valid."
 
 
+def check_username(username):
+    """
+    Checks a candidate username against our signup rules, same shape as
+    check_password() below. This exists as a second line of defence, on top
+    of the frontend's HTML-escaping (see escapeHtml() in index.html): even if
+    something ever bypasses the frontend and posts straight to /api/register,
+    the database itself will never end up holding a username containing
+    HTML/script characters like < or > in the first place.
+    """
+    if not (3 <= len(username) <= 20):
+        return False, "Username must be between 3 and 20 characters long."
+    if not all(c.isalnum() or c == "_" for c in username):
+        return False, "Username can only contain letters, numbers, and underscores."
+    if username[0].isdigit():
+        return False, "Username can't start with a number."
+    return True, "Username is valid."
+
+
 def register_user(username, password):
     """Creates a new account. Returns (True, message) on success or
-    (False, message) if the password is invalid or the username is taken."""
+    (False, message) if the username/password is invalid or the username is taken."""
+    is_valid, message = check_username(username)
+    if not is_valid:
+        return False, message
+
     is_valid, message = check_password(password)
     if not is_valid:
         return False, message
