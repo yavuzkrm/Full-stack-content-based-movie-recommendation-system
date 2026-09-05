@@ -1983,7 +1983,16 @@ async function addFavouriteToSlot(item){
       const detail = await apiSafe(`/api/movie/${item.id}`, {}, null);
       if(detail && (detail.overview || detail.directors || detail.cast)){
         const fullIdx = state.favouriteMovies.findIndex(m => m.id === item.id);
-        if(fullIdx !== -1) state.favouriteMovies[fullIdx] = { ...item, ...detail };
+        if(fullIdx !== -1){
+          state.favouriteMovies[fullIdx] = { ...item, ...detail };
+          // Without re-rendering here, the card already on screen keeps its
+          // click handler closed over the ORIGINAL lightweight `item` (no
+          // overview/cast/directors) forever - clicking it to open the detail
+          // view would show a blank description and cast even though the
+          // full data has now landed in state. Re-rendering recreates the
+          // card with the now-complete movie object in its closure.
+          renderFavouritesStrip();
+        }
       }
     }
   } catch(err){
