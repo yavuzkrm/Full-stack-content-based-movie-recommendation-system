@@ -338,12 +338,16 @@
   }
   .search-row .search-icon{ color: var(--text-dim); font-size:16px; }
   .search-row input{
-    flex:1; background: transparent; border:none;
+    flex:1; min-width:0; background: transparent; border:none;
     padding: 12px 4px; color: var(--text); font-family:'Sora',sans-serif; font-size:15px;
   }
   .search-row input:focus{ outline:none; }
-  .search-row .btn{ flex-shrink:0; }
+  .search-row .btn{ flex-shrink:0; white-space:nowrap; }
   .btn-wide{ width:100%; margin-top:6px; }
+  @media (max-width:400px){
+    .search-row{ gap:6px; padding: 6px 6px 6px 12px; }
+    .search-row .btn{ padding: 10px 14px; font-size:13px; }
+  }
 
   /* --- autocomplete dropdown (used by both the homepage and results-page search bars) --- */
   #autocomplete, #results-autocomplete{
@@ -463,6 +467,10 @@
   .pw-rule.met{ color: var(--green); }
   .modal-switch{ font-size:12px; color: var(--text-dim); text-align:center; cursor:pointer; }
   .modal-switch span{ color: var(--accent); }
+  /* keeps the login/signup fields inside a real <form> (see markup below) without affecting
+     the .modal flex layout - a <form> would otherwise become a single flex child and break
+     the gap-based spacing between the username/password fields and the rest of the modal. */
+  #login-form{ display:contents; }
 
   /* --- rating modal --- */
   .rating-modal{ width: 400px; position:relative; text-align:center; align-items:center; }
@@ -638,8 +646,13 @@
 <div class="overlay" id="overlay">
   <div class="modal">
     <h3 id="modal-title">Log in</h3>
-    <input type="text" id="modal-username" placeholder="Username">
-    <input type="password" id="modal-password" placeholder="Password">
+    <!-- Wrapping the credential fields in their own <form> gives the browser a real
+         boundary for its password manager, so it stops treating unrelated text inputs
+         elsewhere on the page (e.g. the movie search box) as candidate username fields. -->
+    <form id="login-form" autocomplete="on">
+      <input type="text" id="modal-username" name="username" autocomplete="username" placeholder="Username">
+      <input type="password" id="modal-password" name="password" autocomplete="current-password" placeholder="Password">
+    </form>
     <div class="pw-rules" id="pw-rules"></div>
     <div class="modal-error" id="modal-error"></div>
     <button class="btn btn-accent" id="modal-submit">Log in</button>
@@ -860,9 +873,19 @@ function syncModalText(){
   document.getElementById("modal-switch").innerHTML = isLogin
     ? 'Don\'t have an account? <span>Sign up</span>'
     : 'Already have an account? <span>Log in</span>';
+  // "new-password" (vs "current-password") tells the browser this is an account-creation
+  // field, so it offers to generate/save a new password instead of matching an old one.
+  document.getElementById("modal-password").setAttribute("autocomplete", isLogin ? "current-password" : "new-password");
   renderPwRules();
 }
 document.getElementById("modal-password").addEventListener("input", renderPwRules);
+// The fields now live inside a real <form> (for password-manager scoping - see the markup
+// comment above); this just stops that form's native submit (page reload) on Enter and
+// routes it to the exact same logic the button already uses.
+document.getElementById("login-form").addEventListener("submit", (e)=>{
+  e.preventDefault();
+  document.getElementById("modal-submit").click();
+});
 document.getElementById("overlay").onclick = (e)=>{
   if(e.target.id === "overlay") document.getElementById("overlay").classList.remove("open");
 };
