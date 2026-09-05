@@ -14,7 +14,7 @@ def refresh_popular_movies():
 
 if __name__ == "__main__":
     scheduler = BackgroundScheduler()
-    scheduler.add_job(refresh_popular_movies, "interval", hours=24, next_run_time=datetime.now())
+    scheduler.add_job(refresh_popular_movies, "interval", hours=24)
     scheduler.start()
     print("Scheduler started — will refresh the popular movies list every 24 hours.")
 
