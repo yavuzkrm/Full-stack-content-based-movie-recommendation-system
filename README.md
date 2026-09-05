@@ -44,7 +44,7 @@ crowd out a genuinely similar one.
 
 | Layer          | What's used |
 |----------------|-------------|
-| Backend        | Python, Flask |
+| Backend        | Python, Flask, gunicorn |
 | Database       | MySQL |
 | Recommendation | pandas, scikit-learn (TF-IDF + cosine similarity) |
 | Frontend       | Plain HTML/CSS/JavaScript — no framework, no build step |
@@ -55,13 +55,14 @@ crowd out a genuinely similar one.
 ```
 .
 ├── main.py                        # Flask app — all /api/... routes live here
+├── refresh_daily_popular_movies.py # standalone process that keeps "Trending Today" fresh (see Deployment below)
 ├── config.py                      # loads .env, sets up the DB connection pool
 ├── requirements.txt
 ├── db/
 │   └── schema.sql                 # run this once to create the database & tables
 ├── data/
 │   ├── fetch_movies.py            # one-time/occasional bulk import from TMDB
-│   └── fetch_daily_popular_movies.py  # keeps the "Trending Today" row fresh
+│   └── fetch_daily_popular_movies.py  # the actual TMDB fetch/DB logic, called by refresh_daily_popular_movies.py
 ├── recommend/
 │   └── engine.py                  # the actual recommendation model
 ├── user/
@@ -113,6 +114,8 @@ python -m data.fetch_movies
 
 **5. Run the app**
 
+For local development:
+
 ```bash
 python main.py
 ```
@@ -121,14 +124,38 @@ Then open **http://localhost:5000** in your browser. The first launch prints
 a short "warming up the recommendation engine" message while it builds the
 similarity model — that's normal, and only happens once per server start.
 
+## Deployment
+
+In production, the app is served with **gunicorn** instead of Flask's own
+development server:
+
+```bash
+gunicorn main:app
+```
+
+Keeping the "Trending Today" refresh working under gunicorn needs one extra
+piece: gunicorn can run several worker processes at once, each importing
+`main.py` separately, so a scheduler started *inside* `main.py` would end up
+running once per worker instead of once a day. To avoid that, the daily
+refresh lives in its own standalone script instead:
+
+```bash
+python refresh_daily_popular_movies.py
+```
+
+This script runs forever (on purpose — its own internal scheduler wakes up
+once every 24 hours to refresh the list, and the surrounding loop just keeps
+the process alive in between). That means it needs to be deployed as an
+**always-on process** alongside the web app — e.g. on Railway, as a second
+service in the same project, with its start command set to the line above.
+It is **not** a fit for a "Cron Job"-style service, since those expect the
+command to finish and exit, not run indefinitely.
+
 ## Notes
 
 - The recommendation model, the search index, and the "Trending Today" cache
   all live in memory and are rebuilt when the server restarts — there's
   nothing to keep in sync by hand.
-- `data/fetch_daily_popular_movies.py` is also wired into a background job
-  (started automatically by `main.py`) that refreshes the trending list every
-  24 hours without needing a cron job or manual re-run.
 - If a signal has no data yet (e.g. you haven't run the keyword-fetching step
   for older movies), the engine doesn't crash — that one signal just quietly
   contributes nothing until real data is there.
