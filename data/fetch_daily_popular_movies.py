@@ -20,7 +20,25 @@ def fetch_popular_movie():
     """Pulls today's top 10 trending movies from TMDB and saves them —
     both into the main `movies` table (in case one of them is completely new
     to our catalogue) and into `popular_today`, which is what the homepage's
-    "Trending Today" row actually reads from."""
+    "Trending Today" row actually reads from.
+
+    IMPORTANT ordering: everything that talks to TMDB (the slow part — one
+    request per movie for credits, one for keywords, with a deliberate pause
+    between calls to respect TMDB's rate limits) happens FIRST, and only
+    touches `movies` / `movie_genres` / `people` / `movie_cast` /
+    `movie_keywords` — tables that are safe to update at any time, since
+    inserts there use INSERT IGNORE and never remove anything visitors are
+    currently looking at. `popular_today` — the ONE table the homepage
+    actually reads live from — isn't touched until the very end, where it's
+    wiped and refilled in a single short transaction. That keeps the window
+    where "Trending Today" could look empty down to a few milliseconds
+    (just a TRUNCATE + 10 INSERTs) instead of however long the whole TMDB
+    fetch takes (which can be many seconds). Earlier this function truncated
+    the table up front and only filled it back in at the end — during that
+    entire gap, any visitor's homepage would show an empty "Trending Today"
+    row, and it would happen on every refresh, including the one that now
+    fires immediately whenever this script (re)starts (e.g. on every deploy).
+    """
     conn = get_db()
     cursor = conn.cursor()
 
@@ -58,28 +76,29 @@ def fetch_popular_movie():
         fetch_and_save_credits(cursor, m["id"])
         fetch_and_save_keywords(cursor, m["id"])
 
-        # popular_today has no unique constraint on movie_id (only rank_id is
-        # a key), so this INSERT always adds a new row — that's intentional,
-        # since truncate_popular_movie() below wipes the table clean once a
-        # day right before this function refills it.
-        cursor.execute("INSERT INTO popular_today (movie_id) VALUES (%s)", (m["id"],))
-
+    # Everything above this point only ever ADDS rows (INSERT IGNORE), so it's
+    # harmless to have committed already if the truncate+refill below were to
+    # fail partway — worst case, the catalogue just has a few extra movies in
+    # it. Committing here also means the slow TMDB fetching above isn't left
+    # holding one long-running transaction open the whole time.
     conn.commit()
-    cursor.close()
-    conn.close()
 
-
-def truncate_popular_movie():
-    """Empties the "trending today" table so fetch_popular_movie() can fill
-    it back up with a fresh list. Called once a day by the scheduled job in
-    main.py, right before fetch_popular_movie()."""
-    conn = get_db()
-    cursor = conn.cursor()
+    # This is the only part visitors' /api/popular requests can actually see,
+    # so it's kept as one short transaction: wipe the old top-10, write the
+    # new one, commit once. TRUNCATE also always causes MySQL/InnoDB to do an
+    # implicit commit of its own, so there's no gap between "table empty" and
+    # "table refilled" for another connection to catch a request in.
     cursor.execute("TRUNCATE TABLE popular_today")
+    for m in data:
+        # popular_today has no unique constraint on movie_id (only rank_id is
+        # a key), so this INSERT always adds a new row — that's fine here
+        # since the TRUNCATE right above already guarantees a clean slate.
+        cursor.execute("INSERT INTO popular_today (movie_id) VALUES (%s)", (m["id"],))
     conn.commit()
+
     cursor.close()
     conn.close()
-
+    
 
 def get_popular_movies():
     """Reads today's trending movies back out, with full details (genres,
@@ -121,7 +140,6 @@ def get_popular_movies():
 
 
 if __name__ == "__main__":
-    truncate_popular_movie()
     fetch_popular_movie()
     popular_movies = get_popular_movies()
     print(f"Fetched {len(popular_movies)} trending movies.")
