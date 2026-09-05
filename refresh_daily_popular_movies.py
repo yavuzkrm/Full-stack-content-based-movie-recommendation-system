@@ -1,14 +1,16 @@
 import time
 from datetime import datetime
 from apscheduler.schedulers.background import BackgroundScheduler
-from data.fetch_daily_popular_movies import fetch_popular_movie, truncate_popular_movie
+from data.fetch_daily_popular_movies import fetch_popular_movie
 
 
 def refresh_popular_movies():
-    """Runs once a day (see the scheduler at the bottom of this file):
-    wipes yesterday's "trending today" list and pulls a fresh one from TMDB."""
+    """Runs once a day (see the scheduler at the bottom of this file): pulls
+    a fresh "trending today" list from TMDB. The old list isn't cleared until
+    the new one is ready — see fetch_popular_movie()'s docstring for why that
+    matters (it's what keeps "Trending Today" from going visibly empty on the
+    homepage during the refresh)."""
     print("Refreshing today's popular movies list...")
-    truncate_popular_movie()
     fetch_popular_movie()
     print("Done.")
 
