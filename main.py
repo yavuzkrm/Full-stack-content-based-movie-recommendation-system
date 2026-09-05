@@ -1,5 +1,4 @@
 from functools import wraps
-from apscheduler.schedulers.background import BackgroundScheduler
 from flask import Flask, request, jsonify, render_template, session
 import sys, os
 import pandas as pd
@@ -11,7 +10,7 @@ from user.auth import (register_user, login_user, save_rating,
                        remove_from_watched, get_watched, add_to_favourites, remove_from_favourites,
                        get_favourites, count_favourites)
 from recommend.engine import load_data, recommend, recommend_multi, get_data_and_matrix
-from data.fetch_daily_popular_movies import fetch_popular_movie, truncate_popular_movie, get_popular_movies
+from data.fetch_daily_popular_movies import get_popular_movies
 from flask_caching import Cache
 
 app = Flask(__name__)
@@ -312,41 +311,9 @@ def api_get_favourites():
 def api_get_popular_movies():
     return jsonify(get_popular_movies())
 
-
-def refresh_popular_movies():
-    """Runs once a day (see the scheduler at the bottom of this file):
-    wipes yesterday's "trending today" list and pulls a fresh one from TMDB."""
-    print("Refreshing today's popular movies list...")
-    truncate_popular_movie()
-    fetch_popular_movie()
-
-
-if __name__ == "__main__":
-    # os.environ["WERKZEUG_RUN_MAIN"] is Flask's own way of telling us "this is
-    # the real worker process, not the reloader's throwaway first launch".
-    # Flask's debug mode starts the app twice (once to watch for file changes,
-    # once to actually run it) — without this check we'd end up with the
-    # scheduled job and the warm-up below running twice as often as intended.
-    if os.environ.get("WERKZEUG_RUN_MAIN") == "true" or not app.debug:
-        scheduler = BackgroundScheduler()
-        scheduler.add_job(refresh_popular_movies, "interval", hours=24)
-        scheduler.start()
-
-        # Building the recommendation engine (pulling every movie from MySQL,
-        # then computing similarity scores between all of them) used to happen
-        # "lazily" — the first time any visitor searched for something. For a
-        # real-sized catalogue that can take a few seconds, so whoever
-        # happened to be the first person to search after a server restart
-        # would just sit there waiting. Doing it here instead, once, while the
-        # server is starting up and nobody's waiting on it yet, means every
-        # single request after the server is "ready" is fast from the start.
-        print("Warming up the recommendation engine (building the similarity matrix)...")
-        try:
-            get_data_and_matrix()
-            print("Recommendation engine ready.")
-        except Exception as e:
-            print(f"Could not warm up the recommendation engine (will retry on first search): {e}")
-
-    port = int(os.environ.get("PORT", 5000))
-    debug_mode = os.environ.get("FLASK_DEBUG", "False").lower() == "true"
-    app.run(host="0.0.0.0", port=port, debug=debug_mode)
+# --- Warm up the recommendation engine on startup -----------------------------
+try:
+    get_data_and_matrix()
+    print("Recommendation engine ready.")
+except Exception as e:
+    print(f"Could not warm up the recommendation engine (will retry on first search): {e}")
