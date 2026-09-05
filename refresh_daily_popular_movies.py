@@ -1,4 +1,5 @@
 import time
+from datetime import datetime
 from apscheduler.schedulers.background import BackgroundScheduler
 from data.fetch_daily_popular_movies import fetch_popular_movie, truncate_popular_movie
 
@@ -14,9 +15,15 @@ def refresh_popular_movies():
 
 if __name__ == "__main__":
     scheduler = BackgroundScheduler()
-    scheduler.add_job(refresh_popular_movies, "interval", hours=24)
+    # next_run_time=datetime.now() makes the FIRST refresh fire immediately on
+    # startup, instead of APScheduler's default "interval" behaviour of
+    # waiting a full 24 hours for the first run. Without this, every time the
+    # process restarts (a redeploy, a crash, a Railway maintenance restart...)
+    # "Trending Today" would silently stay empty/stale for up to a day before
+    # anyone noticed.
+    scheduler.add_job(refresh_popular_movies, "interval", hours=24, next_run_time=datetime.now())
     scheduler.start()
-    print("Scheduler started — will refresh the popular movies list every 24 hours.")
+    print("Scheduler started — refreshing the popular movies list now, then every 24 hours.")
 
     # BackgroundScheduler runs its job on a daemon thread, which means it dies
     # the instant this main thread reaches the end of the script — without
