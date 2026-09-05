@@ -114,9 +114,7 @@ python -m data.fetch_movies
 
 **5. Run the app**
 
-`main.py` no longer calls `app.run()` itself (see [Deployment](#deployment)
-below for why) — run it through gunicorn instead, both locally and in
-production:
+run it through gunicorn:
 
 ```bash
 gunicorn main:app --reload
