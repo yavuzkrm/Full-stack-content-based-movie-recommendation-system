@@ -440,6 +440,16 @@ def _only_cache_non_empty(response):
 @app.route("/api/popular")
 @cache.cached(timeout=86400, response_filter=_only_cache_non_empty)  # cache the response for 24 hours — the trending list only changes once a day anyway (see refresh_popular_movies below), so there's no reason to hit the database on every single visitor
 def api_get_popular_movies():
+    # get_popular_movies() now returns the FULL trending pool (up to TRENDING_POOL_SIZE —
+    # see data/fetch_daily_popular_movies.py), since /api/popular/all (below) needs all of
+    # it — the homepage's horizontal "Trending Today" row only ever shows the first 10 of
+    # whatever it's given, so this route keeps that behaviour by slicing here instead of
+    # changing what the homepage itself does.
+    return jsonify(get_popular_movies()[:10])
+
+@app.route("/api/popular/all")
+@cache.cached(timeout=86400, response_filter=_only_cache_non_empty)
+def api_get_popular_movies_all():
     return jsonify(get_popular_movies())
 
 # --- Warm up the recommendation engine on startup -----------------------------
