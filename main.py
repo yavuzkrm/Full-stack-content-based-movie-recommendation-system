@@ -7,7 +7,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from config import SECRET_KEY, IS_PRODUCTION
 from user.auth import (register_user, login_user, save_rating,
                        delete_rating, delete_account, add_to_watchlist,
-                       remove_from_watchlist, get_watchlist, get_rated_movies, add_to_watched,
+                       remove_from_watchlist, get_watchlist, get_rated_movies, get_all_ratings, add_to_watched,
                        remove_from_watched, get_watched, add_to_favourites, remove_from_favourites,
                        get_favourites, count_favourites)
 from recommend.engine import load_data, recommend, recommend_multi, get_data_and_matrix
@@ -302,7 +302,21 @@ def api_delete_rating(movie_id):
 @app.route("/api/ratings")
 @login_required
 def api_get_rated_movies():
-    return jsonify(get_rated_movies(session["user_id"]))
+    # get_rated_movies() only carries the lightweight movie shape (id/title/poster_path/
+    # vote_avg) — it deliberately doesn't JOIN in the rating value itself (see auth.py's
+    # comment on why get_rated_movies/get_all_ratings were split into two single-purpose
+    # queries instead of one bigger one). That split only pays off if this route actually
+    # does the merge it was designed for — this is that merge: one lookup dict from
+    # get_all_ratings() (movie_id -> rating), then stamp a "rating" field onto each movie.
+    # Skipping this step (returning get_rated_movies() alone) is exactly what silently broke
+    # the rating badge everywhere: state.ratings.get(id) would come back undefined for every
+    # movie, even though .has(id) still read true — so the ★ button correctly showed
+    # "active" while the actual rating number never appeared anywhere in the UI.
+    movies = get_rated_movies(session["user_id"])
+    ratings_by_movie = {r["movie_id"]: r["rating"] for r in get_all_ratings(session["user_id"])}
+    for movie in movies:
+        movie["rating"] = ratings_by_movie.get(movie["id"])
+    return jsonify(movies)
 
 
 # --- Watched ---------------------------------------------------------------
