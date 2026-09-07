@@ -78,12 +78,17 @@
     display:flex; align-items:center; cursor:pointer;
   }
   .logo img{ height: 56px; width:auto; display:block; }
-  .main-nav{ display:flex; align-items:center; gap:4px; }
+  .main-nav{
+    display:flex; align-items:center; gap:2px; background: var(--surface); border:1px solid var(--line);
+    border-radius: 999px; padding: 4px;
+  }
   .nav-link{
-    background:none; border:none; color: var(--text-dim); font-size:14px; font-weight:600;
-    padding: 8px 14px; border-radius: 999px; cursor:pointer; transition: all .15s ease;
+    display:flex; align-items:center; gap:6px;
+    background:none; border:none; color: var(--text-dim); font-size:13px; font-weight:600;
+    padding: 8px 16px; border-radius: 999px; cursor:pointer; transition: all .15s ease; white-space:nowrap;
   }
   .nav-link:hover{ color: var(--text); background: var(--surface-2); }
+  .nav-link.active{ color:#062420; background: var(--accent); }
   .header-right{ display:flex; align-items:center; gap:14px; }
   .lang-toggle{
     display:flex; background: var(--surface-2); border:1px solid var(--line);
@@ -676,7 +681,8 @@
   <div class="header-inner">
     <div class="logo" id="logo-home"><img src="/static/images/logo.png" alt="NextWatch"></div>
     <nav class="main-nav">
-      <button class="nav-link" id="nav-top250">Top 250</button>
+      <button class="nav-link" id="nav-top250">🏆 Top 250</button>
+      <button class="nav-link" id="nav-genres">🎭 Genres</button>
     </nav>
     <div class="header-right">
       <div class="lang-toggle" id="lang-toggle">
@@ -1373,7 +1379,7 @@ document.getElementById("detail-overlay").onclick = (e)=>{
 // Pages that don't need a login — browsing Top 250 / a genre / someone's
 // filmography is public, unlike the personal lists (watchlist, favourites,
 // watched, your ratings) which obviously need to know WHO's asking.
-const PUBLIC_PAGES = ["home", "results", "top250", "genre", "actor", "director"];
+const PUBLIC_PAGES = ["home", "results", "top250", "genres", "genre", "actor", "director"];
 function goToPage(page, param){
   if(!PUBLIC_PAGES.includes(page) && !state.user){ toast("You need to log in first."); openModal("login"); return; }
   state.page = page;
@@ -1387,7 +1393,6 @@ function renderCurrentPage(){
     root.innerHTML = homeTemplate();
     bindHomeEvents();
     loadPopular();
-    loadGenreChips();
     return;
   }
   if(state.page === "results"){
@@ -1398,6 +1403,11 @@ function renderCurrentPage(){
   if(state.page === "top250"){
     root.innerHTML = richListTemplate("Top 250", "The 250 highest-rated movies in the whole catalogue.");
     loadRichList("/api/top250");
+    return;
+  }
+  if(state.page === "genres"){
+    root.innerHTML = genresIndexTemplate();
+    loadGenresIndex();
     return;
   }
   if(state.page === "genre"){
@@ -1657,16 +1667,6 @@ function homeTemplate(){
     </div>
   </section>
 
-  <section class="section" id="genres-section">
-    <div class="section-head">
-      <div>
-        <h2><span class="num">Browse by</span> Genre</h2>
-        <div class="section-sub">Every genre's best movies, sorted by rating</div>
-      </div>
-    </div>
-    <div class="genre-chip-row" id="genre-chip-row"></div>
-  </section>
-
   ${state.user ? `
   <section class="section" id="home-favourites-section">
     <div class="section-head">
@@ -1770,23 +1770,56 @@ async function loadPopular(){
     row.innerHTML = `<div class="empty-note">Could not load trending movies: ${err.message}</div>`;
   }
 }
-async function loadGenreChips(){
-  const wrap = document.getElementById("genre-chip-row");
-  if(!wrap) return;
-  try{
-    const genres = await api("/api/genres");
-    wrap.innerHTML = genres.map(g=>
-      // The chip's LABEL follows the language toggle (name/name_tr), but clicking it
-      // always navigates by the English `name` — that's the identifier /api/genre/<name>
-      // and the database itself actually use, same reasoning as the genre tags in
-      // openDetail() above.
+// ---------- genre-selection page (reached via the header's "Genres" nav link) ----------
+// Picking a genre here lands on the exact same /api/genre/<name> page (goToPage("genre", ...))
+// that a genre tag in the detail modal already uses. Nothing about how a single genre's
+// movie list works changes; this only adds a dedicated, easy to find entry point for
+// picking WHICH genre in the first place — the homepage used to have its own plain chip
+// row for this too, but it was dropped once this page existed, since this one strictly
+// does more (search + the full list) with nothing lost.
+function genresIndexTemplate(){
+  return `
+    <section class="section" style="border-top:none;">
+      <div class="page-header">
+        <div>
+          <h2>Browse by Genre</h2>
+          <div class="section-sub">Search or pick a genre to see its best movies, sorted by rating.</div>
+        </div>
+        <button class="btn btn-ghost btn-sm" id="back-home-btn">← Home</button>
+      </div>
+      <div class="search-row" style="max-width:420px; margin-bottom:24px;">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="genres-index-search" placeholder="Search genres..." autocomplete="off">
+      </div>
+      <div class="genre-chip-row" id="genres-index-grid"></div>
+    </section>`;
+}
+async function loadGenresIndex(){
+  document.getElementById("back-home-btn").onclick = ()=> goToPage("home");
+  const grid = document.getElementById("genres-index-grid");
+  const searchInput = document.getElementById("genres-index-search");
+  let allGenres = [];
+
+  function renderFiltered(){
+    const q = searchInput.value.trim().toLowerCase();
+    const filtered = q
+      ? allGenres.filter(g => g.name.toLowerCase().includes(q) || (g.name_tr || "").toLowerCase().includes(q))
+      : allGenres;
+    if(!filtered.length){ grid.innerHTML = '<div class="empty-note">No genres match your search.</div>'; return; }
+    grid.innerHTML = filtered.map(g=>
       `<div class="genre-chip" data-genre="${g.name}">${state.lang === "tr" ? g.name_tr : g.name}</div>`
     ).join("");
-    wrap.querySelectorAll(".genre-chip").forEach(chip=>{
+    grid.querySelectorAll(".genre-chip").forEach(chip=>{
       chip.onclick = ()=> goToPage("genre", chip.dataset.genre);
     });
+  }
+
+  searchInput.addEventListener("input", renderFiltered);
+  try{
+    allGenres = await api("/api/genres");
+    renderFiltered();
   } catch(err){
-    wrap.innerHTML = `<div class="empty-note">Could not load genres: ${err.message}</div>`;
+    grid.innerHTML = `<div class="empty-note">Could not load genres: ${err.message}</div>`;
   }
 }
 
@@ -2249,6 +2282,7 @@ checkSession().then(renderCurrentPage);
 renderCurrentPage();
 
 document.getElementById("nav-top250").onclick = ()=> goToPage("top250");
+document.getElementById("nav-genres").onclick = ()=> goToPage("genres");
 
 // Language toggle: switches state.lang and just re-renders the current page from
 // scratch (re-fetching its data) rather than trying to relabel already-rendered
