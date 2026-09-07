@@ -3,6 +3,7 @@ import os
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 from config import TMDB_API_KEY, TMDB_BASE_URL, cnxpool
 from data.fetch_movies import fetch_and_save_credits, fetch_and_save_keywords
+from data.fetch_translations import fetch_and_save_movie_translation
 import requests
 import mysql.connector
 
@@ -23,21 +24,22 @@ def fetch_popular_movie():
     "Trending Today" row actually reads from.
 
     IMPORTANT ordering: everything that talks to TMDB (the slow part — one
-    request per movie for credits, one for keywords, with a deliberate pause
-    between calls to respect TMDB's rate limits) happens FIRST, and only
-    touches `movies` / `movie_genres` / `people` / `movie_cast` /
-    `movie_keywords` — tables that are safe to update at any time, since
-    inserts there use INSERT IGNORE and never remove anything visitors are
-    currently looking at. `popular_today` — the ONE table the homepage
-    actually reads live from — isn't touched until the very end, where it's
-    wiped and refilled in a single short transaction. That keeps the window
-    where "Trending Today" could look empty down to a few milliseconds
-    (just a TRUNCATE + 10 INSERTs) instead of however long the whole TMDB
-    fetch takes (which can be many seconds). Earlier this function truncated
-    the table up front and only filled it back in at the end — during that
-    entire gap, any visitor's homepage would show an empty "Trending Today"
-    row, and it would happen on every refresh, including the one that now
-    fires immediately whenever this script (re)starts (e.g. on every deploy).
+    request per movie for credits, one for keywords, one for the Turkish
+    translation, with a deliberate pause between calls to respect TMDB's
+    rate limits) happens FIRST, and only touches `movies` / `movie_genres` /
+    `people` / `movie_cast` / `movie_keywords` — tables that are safe to
+    update at any time, since inserts there use INSERT IGNORE and never
+    remove anything visitors are currently looking at. `popular_today` — the
+    ONE table the homepage actually reads live from — isn't touched until
+    the very end, where it's wiped and refilled in a single short
+    transaction. That keeps the window where "Trending Today" could look
+    empty down to a few milliseconds (just a TRUNCATE + 10 INSERTs) instead
+    of however long the whole TMDB fetch takes (which can be many seconds).
+    Earlier this function truncated the table up front and only filled it
+    back in at the end — during that entire gap, any visitor's homepage
+    would show an empty "Trending Today" row, and it would happen on every
+    refresh, including the one that now fires immediately whenever this
+    script (re)starts (e.g. on every deploy).
     """
     conn = get_db()
     cursor = conn.cursor()
@@ -75,6 +77,14 @@ def fetch_popular_movie():
 
         fetch_and_save_credits(cursor, m["id"])
         fetch_and_save_keywords(cursor, m["id"])
+        # Same reasoning as credits/keywords above: this is a no-op (one quick
+        # SELECT, no TMDB request) for any movie that's already translated,
+        # so it's safe and cheap to call unconditionally here for all 10 —
+        # whether they're brand new to the catalogue or have been in it for
+        # months. This is what keeps "Trending Today" from slowly filling up
+        # with untranslated movies over time without anyone having to
+        # remember to re-run data/fetch_translations.py by hand.
+        fetch_and_save_movie_translation(cursor, m["id"])
 
     # Everything above this point only ever ADDS rows (INSERT IGNORE), so it's
     # harmless to have committed already if the truncate+refill below were to
@@ -115,8 +125,11 @@ def get_popular_movies():
     try:
         cursor.execute("""
             SELECT
-                m.id, m.title, m.poster_path, m.overview, m.vote_avg,
+                m.id, m.title, COALESCE(m.title_tr, m.title) AS title_tr,
+                m.poster_path, m.overview, COALESCE(m.overview_tr, m.overview) AS overview_tr,
+                m.vote_avg,
                 GROUP_CONCAT(DISTINCT g.name SEPARATOR ',') AS genres,
+                GROUP_CONCAT(DISTINCT COALESCE(g.name_tr, g.name) SEPARATOR ',') AS genres_tr,
                 GROUP_CONCAT(DISTINCT pd.name SEPARATOR ', ') AS directors,
                 GROUP_CONCAT(DISTINCT pc.name SEPARATOR ', ') AS cast
             FROM popular_today pt
