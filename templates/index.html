@@ -924,6 +924,8 @@ const UI_TEXT = {
     pw_special: "At least one special character", pw_nospace: "No spaces allowed",
     your_rating_x: (n)=>`Your rating: ${n}/10`,
     your_rating_star_x: (n)=>`★ Your rating: ${n}/10`,
+    filmography_actor_sub: (name)=>`Movies starring ${name}`,
+    filmography_director_sub: (name)=>`Movies directed by ${name}`,
   },
   tr: {
     nav_top250_label: "İlk 250", nav_genres_label: "Türler",
@@ -1018,6 +1020,8 @@ const UI_TEXT = {
     pw_special: "En az bir özel karakter", pw_nospace: "Boşluk içermemeli",
     your_rating_x: (n)=>`Senin puanın: ${n}/10`,
     your_rating_star_x: (n)=>`★ Senin puanın: ${n}/10`,
+    filmography_actor_sub: (name)=>`${name}'in oynadığı filmler`,
+    filmography_director_sub: (name)=>`${name}'in yönettiği filmler`,
   },
 };
 function t(key, ...args){
@@ -1289,6 +1293,17 @@ function movieCard(movie){
     };
   });
   div.addEventListener("click", ()=> openDetail(movie));
+  // Kicks off the /api/movie/<id> fetch openDetail() would otherwise only start ON click —
+  // hovering a card is a strong "about to click" signal, and the natural pause between
+  // hovering and actually clicking is usually enough for this to finish first, so the detail
+  // view opens with everything already in place instead of visibly filling in a beat later.
+  // { once:true } is enough on its own to stop this refiring on repeated hovers — no separate
+  // "already fetching" check needed here, prefetchMovieDetail() already guards against that.
+  div.addEventListener("mouseenter", ()=> prefetchMovieDetail(movie), { once:true });
+  // Touch devices never fire mouseenter — touchstart is their closest equivalent "about to
+  // tap" signal, firing a beat before the tap's own click event, so it buys the same small
+  // head start there too.
+  div.addEventListener("touchstart", ()=> prefetchMovieDetail(movie), { once:true, passive:true });
   return div;
 }
 // ── the old project's detailed "vcard" design, carried over into the new theme — used on the results page ──
@@ -1607,13 +1622,25 @@ function openDetail(movie){
   // itself) always includes it, even as an empty string, so it's only ever literally
   // undefined on these light objects.
   if(movie.overview === undefined){
-    apiSafe(`/api/movie/${movie.id}`, {}, null).then(full=>{
+    prefetchMovieDetail(movie); // no-op if a hover already started this fetch — see below
+    movieDetailCache[movie.id].then(full=>{
       if(!full) return;
       if(!detailMovie || detailMovie.id !== movie.id) return; // the user already closed this movie or opened a different one — don't let a late response overwrite what's on screen now
       Object.assign(movie, full); // fills in overview/title_tr/overview_tr/genres/genres_tr/directors/cast in place
       openDetail(movie); // re-render now that the object actually has everything — movie.overview is no longer undefined, so this single extra pass can't loop
     });
   }
+}
+// Shared by every light-shape card (watchlist/favourites/watched/ratings, actor/director
+// filmography) so the /api/movie/<id> fetch openDetail() needs only ever happens ONCE per
+// movie per page — caches the in-flight/resolved PROMISE itself (not just its result), so a
+// second call (e.g. hover-prefetch already started it, then the user clicks before it
+// resolves) reuses the same request instead of firing a duplicate one.
+const movieDetailCache = {};
+function prefetchMovieDetail(movie){
+  if(movie.overview !== undefined) return; // already has everything — this is a rich-shape movie, nothing to prefetch
+  if(movieDetailCache[movie.id]) return; // already fetching or fetched
+  movieDetailCache[movie.id] = apiSafe(`/api/movie/${movie.id}`, {}, null);
 }
 function renderDetailActions(movie){
   const wrap = document.getElementById("detail-actions");
@@ -1709,10 +1736,14 @@ function renderCurrentPage(){
   if(state.page === "actor" || state.page === "director"){
     const personName = state.pageParam;
     const endpoint = state.page === "actor" ? `/api/cast/${encodeURIComponent(personName)}` : `/api/director/${encodeURIComponent(personName)}`;
+    const subtitle = state.page === "actor" ? t("filmography_actor_sub", personName) : t("filmography_director_sub", personName);
     root.innerHTML = `
       <section class="section" style="border-top:none;">
         <div class="page-header">
-          <h2>${personName}</h2>
+          <div>
+            <h2>${personName}</h2>
+            <div class="section-sub">${subtitle}</div>
+          </div>
           <button class="btn btn-ghost btn-sm" id="back-home-btn">${t("back_home")}</button>
         </div>
         <div class="results-grid" id="list-grid">${skeletonCards(8, true)}</div>
