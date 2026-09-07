@@ -74,10 +74,11 @@
     display:flex; align-items:center; justify-content:space-between;
     padding: 20px 0;
   }
+  .header-left{ display:flex; align-items:center; gap:28px; }
   .logo{
     display:flex; align-items:center; cursor:pointer;
   }
-  .logo img{ height: 56px; width:auto; display:block; }
+  .logo img{ height: 72px; width:auto; display:block; }
   .main-nav{
     display:flex; align-items:center; gap:2px; background: var(--surface); border:1px solid var(--line);
     border-radius: 999px; padding: 4px;
@@ -661,11 +662,14 @@
   .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
 
   @media (max-width:640px){
-    .header-inner{ padding:16px 0; gap:8px; }
-    .logo img{ height: 36px; }
-    .main-nav .nav-link{ padding: 6px 8px; font-size:12px; }
+    .header-inner{ padding:16px 0; gap:6px; flex-wrap:wrap; justify-content:center; row-gap:10px; }
+    .header-left{ gap:8px; }
+    .logo img{ height: 40px; }
+    .main-nav{ padding:3px; gap:0; }
+    .main-nav .nav-link{ padding: 7px 10px; font-size:14px; }
     .header-right{ gap:8px; }
-    .lang-toggle button{ padding: 5px 8px; }
+    .lang-toggle button{ padding: 6px 10px; font-size:12px; }
+    .btn-sm{ padding: 8px 12px; font-size:12px; white-space:nowrap; }
     .hero{ padding: 40px 0 24px; }
     .search-panel{ padding: 22px 18px 26px; border-radius: 18px; }
     .search-modal{ padding: 22px 18px 26px; border-radius: 18px; }
@@ -679,11 +683,13 @@
 <div class="filmstrip"></div>
 <header>
   <div class="header-inner">
-    <div class="logo" id="logo-home"><img src="/static/images/logo.png" alt="NextWatch"></div>
-    <nav class="main-nav">
-      <button class="nav-link" id="nav-top250">🏆 Top 250</button>
-      <button class="nav-link" id="nav-genres">🎭 Genres</button>
-    </nav>
+    <div class="header-left">
+      <div class="logo" id="logo-home"><img src="/static/images/logo.png" alt="NextWatch"></div>
+      <nav class="main-nav">
+        <button class="nav-link" id="nav-top250">🏆 <span class="nav-link-label" data-i18n="nav_top250_label">Top 250</span></button>
+        <button class="nav-link" id="nav-genres">🎭 <span class="nav-link-label" data-i18n="nav_genres_label">Genres</span></button>
+      </nav>
+    </div>
     <div class="header-right">
       <div class="lang-toggle" id="lang-toggle">
         <button data-lang="en" class="active">EN</button>
@@ -698,7 +704,7 @@
   <div id="page-root"></div>
 </main>
 
-<footer>NextWatch — a database systems course project</footer>
+<footer data-i18n="footer">NextWatch — a database systems course project</footer>
 
 <div class="overlay" id="overlay">
   <div class="modal">
@@ -707,8 +713,8 @@
          boundary for its password manager, so it stops treating unrelated text inputs
          elsewhere on the page (e.g. the movie search box) as candidate username fields. -->
     <form id="login-form" autocomplete="on">
-      <input type="text" id="modal-username" name="username" autocomplete="username" placeholder="Username">
-      <input type="password" id="modal-password" name="password" autocomplete="current-password" placeholder="Password">
+      <input type="text" id="modal-username" name="username" autocomplete="username" placeholder="Username" data-i18n-placeholder="username_ph">
+      <input type="password" id="modal-password" name="password" autocomplete="current-password" placeholder="Password" data-i18n-placeholder="password_ph">
     </form>
     <div class="pw-rules" id="pw-rules"></div>
     <div class="modal-error" id="modal-error"></div>
@@ -727,9 +733,9 @@
       <div class="detail-genres" id="detail-genres"></div>
       <p class="detail-overview" id="detail-overview"></p>
       <div class="detail-people" id="detail-people"></div>
-      <div class="detail-section-label">Actions</div>
+      <div class="detail-section-label" data-i18n="detail_actions">Actions</div>
       <div class="detail-actions" id="detail-actions"></div>
-      <div class="detail-section-label">Search Elsewhere</div>
+      <div class="detail-section-label" data-i18n="detail_search_elsewhere">Search Elsewhere</div>
       <div class="detail-ext-links" id="detail-ext-links"></div>
     </div>
   </div>
@@ -739,27 +745,27 @@
   <div class="modal rating-modal">
     <div class="rating-close" id="rating-close">✕</div>
     <h3 id="rating-modal-title">Rate This Movie</h3>
-    <p class="rating-sub">Click a star to rate it from 1–10.</p>
+    <p class="rating-sub" data-i18n="rating_sub">Click a star to rate it from 1–10.</p>
     <div class="stars-row" id="stars-row"></div>
     <div class="rating-score-lbl" id="rating-score-lbl">No rating selected yet</div>
     <label class="rating-watchlist-check" id="rating-watchlist-check" style="display:none;">
       <input type="checkbox" id="rating-watchlist-checkbox">
-      <span>Remove from watchlist</span>
+      <span data-i18n="rating_remove_from_watchlist">Remove from watchlist</span>
     </label>
     <div class="rating-btns">
-      <button class="btn btn-accent btn-wide" id="rating-confirm-btn">Confirm</button>
-      <button class="btn btn-ghost btn-wide" id="rating-delete-btn" style="display:none;">Remove Rating</button>
+      <button class="btn btn-accent btn-wide" id="rating-confirm-btn" data-i18n="rating_confirm">Confirm</button>
+      <button class="btn btn-ghost btn-wide" id="rating-delete-btn" style="display:none;" data-i18n="rating_remove">Remove Rating</button>
     </div>
   </div>
 </div>
 
 <div class="overlay" id="delete-account-overlay">
   <div class="modal danger-modal">
-    <h3>Delete Account</h3>
-    <p>This action can't be undone. Your account, favourites, watchlist, watched list and ratings will all be permanently deleted.</p>
+    <h3 data-i18n="delete_account_title">Delete Account</h3>
+    <p data-i18n="delete_account_body">This action can't be undone. Your account, favourites, watchlist, watched list and ratings will all be permanently deleted.</p>
     <div class="rating-btns">
-      <button class="btn btn-danger btn-wide" id="delete-account-confirm-btn">Yes, delete my account</button>
-      <button class="btn btn-ghost btn-wide" id="delete-account-cancel-btn">Cancel</button>
+      <button class="btn btn-danger btn-wide" id="delete-account-confirm-btn" data-i18n="delete_account_confirm">Yes, delete my account</button>
+      <button class="btn btn-ghost btn-wide" id="delete-account-cancel-btn" data-i18n="cancel">Cancel</button>
     </div>
   </div>
 </div>
@@ -767,10 +773,10 @@
 <div class="overlay" id="slot-search-overlay">
   <div class="search-modal">
     <div class="search-modal-close" id="slot-search-close">✕</div>
-    <h3>Pick a Movie</h3>
+    <h3 data-i18n="pick_movie">Pick a Movie</h3>
     <div class="search-row">
       <span class="search-icon">🔍</span>
-      <input type="text" id="slot-search-input" placeholder="search for a movie..." autocomplete="off">
+      <input type="text" id="slot-search-input" placeholder="search for a movie..." autocomplete="off" data-i18n-placeholder="search_movie_ph">
     </div>
     <div class="search-modal-results" id="slot-search-results"></div>
   </div>
@@ -814,6 +820,221 @@ function localizedOverview(movie){
 }
 function localizedGenres(movie){
   return (state.lang === "tr" ? movie.genres_tr : movie.genres) ?? movie.genres;
+}
+
+// ---------- UI text translation (i18n) ----------
+// Separate from localizedTitle/etc. above: those switch which DATABASE COLUMN a movie's
+// own title/overview/genres come from. UI_TEXT is for the app's OWN chrome — button
+// labels, headings, toasts, empty-state messages — none of which comes from the database
+// at all, so it needs its own dictionary rather than a database column to fall back to.
+// t(key, ...args) looks up `key` in the current language, falling back to English if a
+// translation is ever missing (so a missing TR string never leaves a blank button/label,
+// worst case it just shows English). A value can be a plain string, or a function for text
+// that needs to embed a variable (a movie title, a count, ...).
+const UI_TEXT = {
+  en: {
+    nav_top250_label: "Top 250", nav_genres_label: "Genres",
+    dd_watchlist: "➕ Watchlist", dd_watched: "✓ Watched", dd_ratings: "★ Your Ratings",
+    dd_logout: "→ Log Out", dd_delete_account: "🗑 Delete Account",
+    login: "Log in", signup: "Sign up",
+    username_ph: "Username", password_ph: "Password",
+    no_account: "Don't have an account? ", have_account: "Already have an account? ",
+    detail_actions: "Actions", detail_search_elsewhere: "Search Elsewhere",
+    detail_no_overview: "No overview available.", detail_director: "Director", detail_cast: "Cast",
+    rating_default_title: "Rate This Movie",
+    rating_title_for: (t)=>`Rate "${t}"`,
+    rating_sub: "Click a star to rate it from 1–10.",
+    rating_none_selected: "No rating selected yet",
+    rating_selected: (n)=>`Selected rating: ${n} / 10`,
+    rating_remove_from_watchlist: "Remove from watchlist",
+    rating_confirm: "Confirm", rating_remove: "Remove Rating",
+    saving: "Saving...", deleting: "Deleting...", searching: "Searching...", loading: "↺ Loading...",
+    delete_account_title: "Delete Account",
+    delete_account_body: "This action can't be undone. Your account, favourites, watchlist, watched list and ratings will all be permanently deleted.",
+    delete_account_confirm: "Yes, delete my account", cancel: "Cancel",
+    pick_movie: "Pick a Movie", search_movie_ph: "search for a movie...",
+    footer: "NextWatch — a database systems course project",
+    action_add_favourite: "Add to favourites", action_remove_favourite: "Remove from favourites",
+    action_add_watchlist: "Add to watchlist", action_remove_watchlist: "Remove from watchlist",
+    action_mark_watched: "Mark as watched", action_remove_watched: "Remove from watched",
+    action_rate: "Rate this", action_edit_rating: "Edit your rating", action_rate_label: "Rate",
+    click_for_details: "Click for details", click_for_details_arrow: "↗ Click for details",
+    hero_eyebrow: "What should you watch tonight?",
+    hero_title1: "Tell me a movie,", hero_title2: "I will find its match.",
+    hero_sub: "A hybrid recommendation engine built on content and ratings - tell it what you love, and it will find you more like it.",
+    tab_single: "Single Movie", tab_multi: "Multiple Movies",
+    panel_hint_single: "Type the name of a movie you love, and we will find you more like it.",
+    single_input_ph: "e.g. Inception", recommend: "Recommend",
+    panel_hint_multi: "Click a card and type a movie name - add at least 2 to activate \"Recommend\".",
+    trending_num: "Trending", trending_rest: "Today",
+    trending_sub: "The movies everyone's talking about on TMDB right now",
+    trending_empty: "No trending movies have been fetched for today yet.",
+    your_num: "Your", favourites_rest: "Favourites",
+    favourites_sub: "Pick a few movies you love, and we will fine-tune your recommendations around them",
+    add_a_movie: "add a movie",
+    add_first_favourite: "Add your first favourite", add_favourite: "Add a favourite",
+    watchlist_title: "Watchlist", favourites_title: "Favourites",
+    watched_title: "Watched", ratings_title: "Your Ratings",
+    watchlist_empty_title: "Your watchlist is empty",
+    watchlist_empty_sub: "Use the ＋ button on any movie card to add it to your watchlist.",
+    favourites_empty_title: "No favourites yet",
+    favourites_empty_sub: "Use the ♥ button on any movie card to add it to your favourites.",
+    watched_empty_title: "Nothing watched yet",
+    watched_empty_sub: "Use the ✓ button on any movie card to mark it as watched.",
+    ratings_empty_title: "Nothing rated yet",
+    ratings_empty_sub: "Use the ★ button on any movie card to rate it from 1 to 10.",
+    nothing_here: "Nothing here yet",
+    no_movies_found_for: (label)=>`No movies found for ${label}`,
+    back_home: "← Home",
+    combined_recommendations: "Combined Recommendations",
+    recommendations_for: (t)=>`Recommendations for "${t}"`,
+    multi_hint: "You can change these movies and get new recommendations - remove one, add another, whatever you like.",
+    get_new_recommendations: "Get New Recommendations",
+    search_another_movie_ph: "Search another movie...",
+    no_results_found: "No results found.",
+    n_recommendations_sorted: (n)=>`${n} recommendations - sorted by rating`,
+    top250_title: "Top 250", top250_sub: "The 250 highest-rated movies in the whole catalogue.",
+    genre_movies_title: (g)=>`${g} Movies`, genre_movies_sub: (g)=>`The best ${g} movies, sorted by rating.`,
+    genres_title: "Browse by Genre",
+    genres_sub: "Search or pick a genre to see its best movies, sorted by rating.",
+    genres_search_ph: "Search genres...", no_genres_match: "No genres match your search.",
+    no_movies_found: "No movies found.",
+    could_not_load: (msg)=>`Could not load this: ${msg}`,
+    could_not_load_trending: (msg)=>`Could not load trending movies: ${msg}`,
+    could_not_load_genres: (msg)=>`Could not load genres: ${msg}`,
+    toast_logged_out: "Logged out.",
+    toast_account_created: "Account created — you can log in now.",
+    toast_welcome_back: (name)=>`Welcome back, ${name}.`,
+    toast_login_required: "You need to log in first.",
+    toast_rated_remove_first: "You've rated this movie. Remove your rating first before taking it off your watched list.",
+    toast_favourites_full_n: (n)=>`Your favourites list is full (max ${n}) - remove one first.`,
+    toast_removed: "Removed.", toast_added: "Added.",
+    toast_pick_star_first: "Pick a star rating first.",
+    toast_rating_saved: "Your rating has been saved.",
+    toast_rating_removed: "Rating removed.",
+    toast_account_deleted: "Your account has been deleted.",
+    toast_recommendations_refreshed: "Recommendations refreshed.",
+    toast_type_movie_title: "Type a movie title.",
+    toast_movie_not_found: "Could not find that movie - make sure the title is spelled correctly.",
+    toast_removed_from_favourites: "Removed from favourites.",
+    toast_favourites_full: "Your favourites list is full - remove one first.",
+    toast_added_to_favourites: "Added to favourites.",
+    toast_no_results_check_titles: "No results found - double-check the movie titles.",
+    pw_length: "At least 8 characters", pw_digit: "At least one digit",
+    pw_upper: "At least one uppercase letter", pw_lower: "At least one lowercase letter",
+    pw_special: "At least one special character", pw_nospace: "No spaces allowed",
+    your_rating_x: (n)=>`Your rating: ${n}/10`,
+    your_rating_star_x: (n)=>`★ Your rating: ${n}/10`,
+  },
+  tr: {
+    nav_top250_label: "İlk 250", nav_genres_label: "Türler",
+    dd_watchlist: "➕ İzleme Listesi", dd_watched: "✓ İzlenenler", dd_ratings: "★ Puanların",
+    dd_logout: "→ Çıkış Yap", dd_delete_account: "🗑 Hesabı Sil",
+    login: "Giriş yap", signup: "Kayıt ol",
+    username_ph: "Kullanıcı adı", password_ph: "Şifre",
+    no_account: "Hesabın yok mu? ", have_account: "Zaten bir hesabın var mı? ",
+    detail_actions: "İşlemler", detail_search_elsewhere: "Başka Yerde Ara",
+    detail_no_overview: "Açıklama mevcut değil.", detail_director: "Yönetmen", detail_cast: "Oyuncular",
+    rating_default_title: "Bu Filmi Puanla",
+    rating_title_for: (t)=>`"${t}" Filmini Puanla`,
+    rating_sub: "1-10 arası puanlamak için bir yıldıza tıkla.",
+    rating_none_selected: "Henüz puan seçilmedi",
+    rating_selected: (n)=>`Seçilen puan: ${n} / 10`,
+    rating_remove_from_watchlist: "İzleme listesinden çıkar",
+    rating_confirm: "Onayla", rating_remove: "Puanı Kaldır",
+    saving: "Kaydediliyor...", deleting: "Siliniyor...", searching: "Aranıyor...", loading: "↺ Yükleniyor...",
+    delete_account_title: "Hesabı Sil",
+    delete_account_body: "Bu işlem geri alınamaz. Hesabın, favorilerin, izleme listen, izlediklerin ve puanların kalıcı olarak silinecek.",
+    delete_account_confirm: "Evet, hesabımı sil", cancel: "İptal",
+    pick_movie: "Bir Film Seç", search_movie_ph: "bir film ara...",
+    footer: "NextWatch — bir veritabanı sistemleri ders projesi",
+    action_add_favourite: "Favorilere ekle", action_remove_favourite: "Favorilerden çıkar",
+    action_add_watchlist: "İzleme listesine ekle", action_remove_watchlist: "İzleme listesinden çıkar",
+    action_mark_watched: "İzlendi olarak işaretle", action_remove_watched: "İzlenenlerden çıkar",
+    action_rate: "Puanla", action_edit_rating: "Puanını düzenle", action_rate_label: "Puanla",
+    click_for_details: "Detaylar için tıkla", click_for_details_arrow: "↗ Detaylar için tıkla",
+    hero_eyebrow: "Bu akşam ne izlesen?",
+    hero_title1: "Bana bir film söyle,", hero_title2: "ben de benzerini bulayım.",
+    hero_sub: "İçerik ve puanlara dayanan hibrit bir öneri motoru - sevdiğin şeyi söyle, sana benzerlerini bulsun.",
+    tab_single: "Tek Film", tab_multi: "Birden Fazla Film",
+    panel_hint_single: "Sevdiğin bir filmin adını yaz, sana benzerlerini bulalım.",
+    single_input_ph: "örn. Inception", recommend: "Öner",
+    panel_hint_multi: "Bir karta tıkla ve bir film adı yaz - \"Öner\" aktif olması için en az 2 film ekle.",
+    trending_num: "Bugün", trending_rest: "Trend Olanlar",
+    trending_sub: "Şu anda TMDB'de herkesin konuştuğu filmler",
+    trending_empty: "Bugün için henüz trend filmler çekilmedi.",
+    your_num: "Senin", favourites_rest: "Favorilerin",
+    favourites_sub: "Sevdiğin birkaç filmi seç, önerilerini buna göre ince ayar yapalım",
+    add_a_movie: "bir film ekle",
+    add_first_favourite: "İlk favorini ekle", add_favourite: "Favori ekle",
+    watchlist_title: "İzleme Listesi", favourites_title: "Favoriler",
+    watched_title: "İzlenenler", ratings_title: "Puanların",
+    watchlist_empty_title: "İzleme listen boş",
+    watchlist_empty_sub: "Herhangi bir film kartındaki ＋ butonuyla izleme listene ekleyebilirsin.",
+    favourites_empty_title: "Henüz favori yok",
+    favourites_empty_sub: "Herhangi bir film kartındaki ♥ butonuyla favorilerine ekleyebilirsin.",
+    watched_empty_title: "Henüz izlenen bir şey yok",
+    watched_empty_sub: "Herhangi bir film kartındaki ✓ butonuyla izlendi olarak işaretleyebilirsin.",
+    ratings_empty_title: "Henüz puanlanan bir şey yok",
+    ratings_empty_sub: "Herhangi bir film kartındaki ★ butonuyla 1-10 arası puan verebilirsin.",
+    nothing_here: "Burada henüz bir şey yok",
+    no_movies_found_for: (label)=>`${label} için film bulunamadı`,
+    back_home: "← Ana Sayfa",
+    combined_recommendations: "Ortak Öneriler",
+    recommendations_for: (t)=>`"${t}" için öneriler`,
+    multi_hint: "Bu filmleri değiştirip yeni öneriler alabilirsin - birini çıkar, başka bir tane ekle, ne istersen.",
+    get_new_recommendations: "Yeni Öneriler Al",
+    search_another_movie_ph: "Başka bir film ara...",
+    no_results_found: "Sonuç bulunamadı.",
+    n_recommendations_sorted: (n)=>`${n} öneri - puana göre sıralı`,
+    top250_title: "İlk 250", top250_sub: "Tüm katalogdaki en yüksek puanlı 250 film.",
+    genre_movies_title: (g)=>`${g} Filmleri`, genre_movies_sub: (g)=>`En iyi ${g} filmleri, puana göre sıralı.`,
+    genres_title: "Türe Göre Keşfet",
+    genres_sub: "En iyi filmlerini görmek için bir tür ara ya da seç, puana göre sıralı.",
+    genres_search_ph: "Tür ara...", no_genres_match: "Aramanla eşleşen tür yok.",
+    no_movies_found: "Film bulunamadı.",
+    could_not_load: (msg)=>`Yüklenemedi: ${msg}`,
+    could_not_load_trending: (msg)=>`Trend filmler yüklenemedi: ${msg}`,
+    could_not_load_genres: (msg)=>`Türler yüklenemedi: ${msg}`,
+    toast_logged_out: "Çıkış yapıldı.",
+    toast_account_created: "Hesap oluşturuldu — artık giriş yapabilirsin.",
+    toast_welcome_back: (name)=>`Tekrar hoş geldin, ${name}.`,
+    toast_login_required: "Önce giriş yapmalısın.",
+    toast_rated_remove_first: "Bu filmi puanladın. İzlenenlerden çıkarmadan önce puanını kaldırmalısın.",
+    toast_favourites_full_n: (n)=>`Favori listen dolu (en fazla ${n}) - önce birini çıkar.`,
+    toast_removed: "Kaldırıldı.", toast_added: "Eklendi.",
+    toast_pick_star_first: "Önce bir yıldız seç.",
+    toast_rating_saved: "Puanın kaydedildi.",
+    toast_rating_removed: "Puan kaldırıldı.",
+    toast_account_deleted: "Hesabın silindi.",
+    toast_recommendations_refreshed: "Öneriler yenilendi.",
+    toast_type_movie_title: "Bir film adı yaz.",
+    toast_movie_not_found: "Bu film bulunamadı - adını doğru yazdığından emin ol.",
+    toast_removed_from_favourites: "Favorilerden çıkarıldı.",
+    toast_favourites_full: "Favori listen dolu - önce birini çıkar.",
+    toast_added_to_favourites: "Favorilere eklendi.",
+    toast_no_results_check_titles: "Sonuç bulunamadı - film adlarını kontrol et.",
+    pw_length: "En az 8 karakter", pw_digit: "En az bir rakam",
+    pw_upper: "En az bir büyük harf", pw_lower: "En az bir küçük harf",
+    pw_special: "En az bir özel karakter", pw_nospace: "Boşluk içermemeli",
+    your_rating_x: (n)=>`Senin puanın: ${n}/10`,
+    your_rating_star_x: (n)=>`★ Senin puanın: ${n}/10`,
+  },
+};
+function t(key, ...args){
+  const entry = (UI_TEXT[state.lang] && UI_TEXT[state.lang][key]) ?? UI_TEXT.en[key];
+  return typeof entry === "function" ? entry(...args) : entry;
+}
+// Static HTML (the login/rating/delete-account/slot-search modals, the footer, etc.) is
+// written once into the page and never regenerated by a JS template function the way the
+// homepage/results/list pages are — so switching languages needs to separately walk over
+// it and update each piece by hand. Elements that need this carry a data-i18n (for their
+// text) or data-i18n-placeholder (for an <input>'s placeholder) attribute naming which
+// UI_TEXT key they show; this function is the one place that applies it, called once on
+// page load and again every time the language toggle changes state.lang.
+function applyStaticTranslations(){
+  document.querySelectorAll("[data-i18n]").forEach(el=>{ el.textContent = t(el.dataset.i18n); });
+  document.querySelectorAll("[data-i18n-placeholder]").forEach(el=>{ el.placeholder = t(el.dataset.i18nPlaceholder); });
 }
 
 // ---------- helpers ----------
@@ -877,12 +1098,12 @@ function renderAuth(){
         <span class="user-chevron">▾</span>
       </div>
       <div id="dropdown">
-        <button class="dd-item" data-page="watchlist">➕ Watchlist</button>
-        <button class="dd-item" data-page="watched">✓ Watched</button>
-        <button class="dd-item" data-page="ratings">★ Your Ratings</button>
+        <button class="dd-item" data-page="watchlist">${t("dd_watchlist")}</button>
+        <button class="dd-item" data-page="watched">${t("dd_watched")}</button>
+        <button class="dd-item" data-page="ratings">${t("dd_ratings")}</button>
         <hr class="dd-sep">
-        <button class="dd-item" id="logout-btn">→ Log Out</button>
-        <button class="dd-item danger" id="delete-account-btn">🗑 Delete Account</button>
+        <button class="dd-item" id="logout-btn">${t("dd_logout")}</button>
+        <button class="dd-item danger" id="delete-account-btn">${t("dd_delete_account")}</button>
       </div>`;
     document.getElementById("user-chip").onclick = (e)=>{
       e.stopPropagation();
@@ -894,7 +1115,7 @@ function renderAuth(){
     document.getElementById("logout-btn").onclick = async ()=>{
       await api("/api/logout", { method:"POST" });
       state.user = null; state.favourites = new Set(); state.favouriteMovies = []; state.watchlist = new Set(); state.watched = new Set(); state.ratings = new Map();
-      renderAuth(); toast("Logged out."); goToPage("home");
+      renderAuth(); toast(t("toast_logged_out")); goToPage("home");
     };
     document.getElementById("delete-account-btn").onclick = ()=>{
       document.getElementById("dropdown").classList.remove("open");
@@ -902,8 +1123,8 @@ function renderAuth(){
     };
   } else {
     el.innerHTML = `
-      <button class="btn btn-ghost btn-sm" id="login-open">Log in</button>
-      <button class="btn btn-accent btn-sm" id="register-open">Sign up</button>`;
+      <button class="btn btn-ghost btn-sm" id="login-open">${t("login")}</button>
+      <button class="btn btn-accent btn-sm" id="register-open">${t("signup")}</button>`;
     document.getElementById("login-open").onclick = ()=> openModal("login");
     document.getElementById("register-open").onclick = ()=> openModal("register");
   }
@@ -928,12 +1149,12 @@ function openModal(mode){
 }
 // Mirrors check_password() on the backend exactly, so signup can show a live preview of which rules are met as the user types.
 const PW_RULES = [
-  { key:"length",  label:"At least 8 characters",         test: p => p.length >= 8 },
-  { key:"digit",   label:"At least one digit",           test: p => /[0-9]/.test(p) },
-  { key:"upper",   label:"At least one uppercase letter", test: p => /[A-Z]/.test(p) },
-  { key:"lower",   label:"At least one lowercase letter", test: p => /[a-z]/.test(p) },
-  { key:"special", label:"At least one special character", test: p => [...p].some(c => PUNCTUATION.includes(c)) },
-  { key:"nospace", label:"No spaces allowed", test: p => !/\s/.test(p) },
+  { key:"length",  labelKey:"pw_length",  test: p => p.length >= 8 },
+  { key:"digit",   labelKey:"pw_digit",   test: p => /[0-9]/.test(p) },
+  { key:"upper",   labelKey:"pw_upper",   test: p => /[A-Z]/.test(p) },
+  { key:"lower",   labelKey:"pw_lower",   test: p => /[a-z]/.test(p) },
+  { key:"special", labelKey:"pw_special", test: p => [...p].some(c => PUNCTUATION.includes(c)) },
+  { key:"nospace", labelKey:"pw_nospace", test: p => !/\s/.test(p) },
 ];
 const PUNCTUATION = `!"#$%&'()*+,-./:;<=>?@[\\]^_\`{|}~`; // exactly the same character set as Python's string.punctuation
 function renderPwRules(){
@@ -951,17 +1172,17 @@ function renderPwRules(){
     // so we keep every rule looking "unmet" while the field is empty.
     const ok = pw.length > 0 && r.test(pw);
     if(!ok) allMet = false;
-    return `<div class="pw-rule ${ok?'met':''}"><span class="pw-rule-icon">${ok?'✓':'○'}</span>${r.label}</div>`;
+    return `<div class="pw-rule ${ok?'met':''}"><span class="pw-rule-icon">${ok?'✓':'○'}</span>${t(r.labelKey)}</div>`;
   }).join("");
   if(submitBtn) submitBtn.disabled = pw.length > 0 && !allMet;
 }
 function syncModalText(){
   const isLogin = state.mode === "login";
-  document.getElementById("modal-title").textContent = isLogin ? "Log in" : "Sign up";
-  document.getElementById("modal-submit").textContent = isLogin ? "Log in" : "Sign up";
+  document.getElementById("modal-title").textContent = isLogin ? t("login") : t("signup");
+  document.getElementById("modal-submit").textContent = isLogin ? t("login") : t("signup");
   document.getElementById("modal-switch").innerHTML = isLogin
-    ? 'Don\'t have an account? <span>Sign up</span>'
-    : 'Already have an account? <span>Log in</span>';
+    ? `${t("no_account")}<span>${t("signup")}</span>`
+    : `${t("have_account")}<span>${t("login")}</span>`;
   // "new-password" (vs "current-password") tells the browser this is an account-creation
   // field, so it offers to generate/save a new password instead of matching an old one.
   document.getElementById("modal-password").setAttribute("autocomplete", isLogin ? "current-password" : "new-password");
@@ -990,7 +1211,7 @@ document.getElementById("modal-submit").onclick = async ()=>{
   try{
     if(state.mode === "register"){
       await api("/api/register", { method:"POST", body: JSON.stringify({username, password}) });
-      toast("Account created — you can log in now.");
+      toast(t("toast_account_created"));
       state.mode = "login"; syncModalText();
       return;
     }
@@ -999,7 +1220,7 @@ document.getElementById("modal-submit").onclick = async ()=>{
     document.getElementById("overlay").classList.remove("open");
     renderAuth();
     await loadUserLists();
-    toast(`Welcome back, ${data.username}.`);
+    toast(t("toast_welcome_back", data.username));
     renderCurrentPage();
   } catch(err){
     errEl.textContent = err.message;
@@ -1035,9 +1256,9 @@ async function loadUserLists(){
 // ---------- card rendering ----------
 function actionMeta(action){
   return {
-    favourites: { icon: "♥", set: state.favourites, label: "Add to favourites", labelActive: "Remove from favourites" },
-    watchlist:  { icon: "＋", set: state.watchlist,  label: "Add to watchlist", labelActive: "Remove from watchlist" },
-    watched:    { icon: "✓", set: state.watched,    label: "Mark as watched", labelActive: "Remove from watched" },
+    favourites: { icon: "♥", set: state.favourites, label: t("action_add_favourite"), labelActive: t("action_remove_favourite") },
+    watchlist:  { icon: "＋", set: state.watchlist,  label: t("action_add_watchlist"), labelActive: t("action_remove_watchlist") },
+    watched:    { icon: "✓", set: state.watched,    label: t("action_mark_watched"), labelActive: t("action_remove_watched") },
   }[action];
 }
 function movieCard(movie){
@@ -1049,17 +1270,17 @@ function movieCard(movie){
   const rating = movie.display_rating ?? movie.vote_avg;
   div.innerHTML = `
     <img class="poster" src="${poster(movie.poster_path)}" alt="${localizedTitle(movie)}" loading="lazy">
-    ${userRating ? `<div class="user-rating-badge" title="Your rating: ${userRating}/10">${userRating}</div>` : ""}
+    ${userRating ? `<div class="user-rating-badge" title="${t('your_rating_x', userRating)}">${userRating}</div>` : ""}
     <div class="body">
       <p class="title">${localizedTitle(movie)}</p>
       <div class="rating" style="${rating ? '' : 'visibility:hidden'}">★ ${rating ? Number(rating).toFixed(1) : '0.0'}</div>
     </div>
-    <div class="card-hint">Click for details</div>
+    <div class="card-hint">${t('click_for_details')}</div>
     <div class="actions" data-movie-id="${movie.id}">
-      <div class="icon-btn ${state.favourites.has(movie.id)?'active':''}" data-action="favourites" title="Add to favourites">♥</div>
-      <div class="icon-btn ${state.watchlist.has(movie.id)?'active':''}" data-action="watchlist" title="Add to watchlist">＋</div>
-      <div class="icon-btn ${state.watched.has(movie.id)?'active':''}" data-action="watched" title="Mark as watched">✓</div>
-      <div class="icon-btn ${state.ratings.has(movie.id)?'active':''}" data-action="rate" title="Rate this">★</div>
+      <div class="icon-btn ${state.favourites.has(movie.id)?'active':''}" data-action="favourites" title="${t('action_add_favourite')}">♥</div>
+      <div class="icon-btn ${state.watchlist.has(movie.id)?'active':''}" data-action="watchlist" title="${t('action_add_watchlist')}">＋</div>
+      <div class="icon-btn ${state.watched.has(movie.id)?'active':''}" data-action="watched" title="${t('action_mark_watched')}">✓</div>
+      <div class="icon-btn ${state.ratings.has(movie.id)?'active':''}" data-action="rate" title="${t('action_rate')}">★</div>
     </div>`;
   div.querySelectorAll(".icon-btn").forEach(btn=>{
     btn.onclick = (e)=>{
@@ -1081,7 +1302,7 @@ function recCard(movie, rank){
   div.innerHTML = `
     <div class="rec-poster">
       <img src="${poster(movie.poster_path)}" alt="${localizedTitle(movie)}" loading="lazy">
-      ${userRating ? `<div class="user-rating-badge" title="Your rating: ${userRating}/10">${userRating}</div>` : ""}
+      ${userRating ? `<div class="user-rating-badge" title="${t('your_rating_x', userRating)}">${userRating}</div>` : ""}
     </div>
     <div class="rec-score">
       <div class="rec-score-label">TMDB</div>
@@ -1095,15 +1316,15 @@ function recCard(movie, rank){
         <span class="rec-title">${localizedTitle(movie)}</span>
       </div>
       ${genres.length ? `<div class="rec-genres">${genres.map(g=>`<span class="genre-tag">${g.trim()}</span>`).join("")}</div>` : ""}
-      ${movie.directors ? `<div class="rec-crew"><strong>Director</strong>${movie.directors}</div>` : ""}
+      ${movie.directors ? `<div class="rec-crew"><strong>${t('detail_director')}</strong>${movie.directors}</div>` : ""}
       ${localizedOverview(movie) ? `<div class="rec-overview">${localizedOverview(movie)}</div>` : ""}
       <div class="rec-actions" data-movie-id="${movie.id}">
-        <div class="icon-btn ${state.favourites.has(movie.id)?'active':''}" data-action="favourites" title="Add to favourites">♥</div>
-        <div class="icon-btn ${state.watchlist.has(movie.id)?'active':''}" data-action="watchlist" title="Add to watchlist">＋</div>
-        <div class="icon-btn ${state.watched.has(movie.id)?'active':''}" data-action="watched" title="Mark as watched">✓</div>
-        <div class="icon-btn ${state.ratings.has(movie.id)?'active':''}" data-action="rate" title="Rate this">★</div>
+        <div class="icon-btn ${state.favourites.has(movie.id)?'active':''}" data-action="favourites" title="${t('action_add_favourite')}">♥</div>
+        <div class="icon-btn ${state.watchlist.has(movie.id)?'active':''}" data-action="watchlist" title="${t('action_add_watchlist')}">＋</div>
+        <div class="icon-btn ${state.watched.has(movie.id)?'active':''}" data-action="watched" title="${t('action_mark_watched')}">✓</div>
+        <div class="icon-btn ${state.ratings.has(movie.id)?'active':''}" data-action="rate" title="${t('action_rate')}">★</div>
       </div>
-      <div class="rec-hint">↗ Click for details</div>
+      <div class="rec-hint">${t('click_for_details_arrow')}</div>
     </div>`;
   div.querySelectorAll(".icon-btn").forEach(btn=>{
     btn.onclick = (e)=>{
@@ -1116,13 +1337,13 @@ function recCard(movie, rank){
   return div;
 }
 async function handleCardAction(movie, btn){
-  if(!state.user){ toast("You need to log in first."); openModal("login"); return; }
+  if(!state.user){ toast(t("toast_login_required")); openModal("login"); return; }
   const action = btn.dataset.action;
   const meta = actionMeta(action);
   const wasActive = meta.set.has(movie.id);
   // A rated movie can't be removed from "watched" — the rating has to be removed first.
   if(action === "watched" && wasActive && state.ratings.has(movie.id)){
-    toast("You've rated this movie. Remove your rating first before taking it off your watched list.");
+    toast(t("toast_rated_remove_first"));
     return;
   }
   // Reject an over-the-limit favourite BEFORE touching the UI or the network at all. We used
@@ -1131,7 +1352,7 @@ async function handleCardAction(movie, btn){
   // confusing to watch. Checking the count we already have client-side (state.favourites.size)
   // means we can catch this case instantly, with no flicker and no wasted request.
   if(action === "favourites" && !wasActive && state.favourites.size >= FAVOURITES_LIMIT){
-    toast(`Your favourites list is full (max ${FAVOURITES_LIMIT}) - remove one first.`);
+    toast(t("toast_favourites_full_n", FAVOURITES_LIMIT));
     return;
   }
   // Ignore a second click on the same button while its request is still in flight (prevents a double-click race).
@@ -1183,18 +1404,51 @@ function syncActionButtonsForMovie(movieId){
       if(meta) btn.classList.toggle("active", meta.set.has(movieId));
     });
   });
+  syncRatingBadge(movieId);
   syncDetailActionButtons(movieId);
   if(document.getElementById("home-fav-picker")) renderFavouritesStrip();
+}
+// The "★8"-style badge in a card's top-left corner isn't part of the icon-button row
+// syncActionButtonsForMovie() above updates — it's baked into the card's HTML once, at the
+// moment the card is first created (see movieCard()/recCard()/favouriteCard() — each only
+// includes the badge <div> in their template string if a rating already existed then). That
+// meant a NEW rating never actually showed up on an already-on-screen card (search results,
+// Trending Today, ...) until the page was reloaded and the card got rebuilt from scratch —
+// this function is what fixes that: given a movie's current rating (or none), it finds every
+// on-screen card for that movie and inserts/updates/removes the badge element directly,
+// working for both of the two card shapes in use (movieCard's plain <img class="poster">
+// vs recCard's <div class="rec-poster"> wrapper) since .user-rating-badge is always
+// position:absolute — it only needs to land inside SOME position:relative ancestor, not
+// any exact one, to end up in the right spot either way.
+function syncRatingBadge(movieId){
+  const rating = state.ratings.get(movieId);
+  document.querySelectorAll(`[data-movie-id="${movieId}"]`).forEach(actionsEl=>{
+    const card = actionsEl.closest(".card, .rec-card");
+    if(!card) return;
+    const posterWrap = card.querySelector(".rec-poster") || card;
+    let badge = posterWrap.querySelector(".user-rating-badge");
+    if(rating){
+      if(!badge){
+        badge = document.createElement("div");
+        badge.className = "user-rating-badge";
+        posterWrap.appendChild(badge);
+      }
+      badge.title = t("your_rating_x", rating);
+      badge.textContent = rating;
+    } else if(badge){
+      badge.remove();
+    }
+  });
 }
 
 // ---------- rating modal ----------
 let ratingMovie = null;
 let ratingSelected = 0;
 function openRatingModal(movie){
-  if(!state.user){ toast("You need to log in first."); openModal("login"); return; }
+  if(!state.user){ toast(t("toast_login_required")); openModal("login"); return; }
   ratingMovie = movie;
   ratingSelected = state.ratings.get(movie.id) || 0;
-  document.getElementById("rating-modal-title").textContent = `Rate "${localizedTitle(movie)}"`;
+  document.getElementById("rating-modal-title").textContent = t("rating_title_for", localizedTitle(movie));
   document.getElementById("rating-delete-btn").style.display = state.ratings.has(movie.id) ? "block" : "none";
   const wlCheck = document.getElementById("rating-watchlist-check");
   wlCheck.style.display = state.watchlist.has(movie.id) ? "flex" : "none";
@@ -1220,9 +1474,9 @@ document.getElementById("rating-overlay").onclick = (e)=>{
 };
 document.getElementById("rating-confirm-btn").onclick = async ()=>{
   if(!ratingMovie) return;
-  if(!ratingSelected){ toast("Pick a star rating first."); return; }
+  if(!ratingSelected){ toast(t("toast_pick_star_first")); return; }
   const btn = document.getElementById("rating-confirm-btn");
-  btn.disabled = true; btn.textContent = "Saving...";
+  btn.disabled = true; btn.textContent = t("saving");
   try{
     await api(`/api/rating/${ratingMovie.id}`, { method:"POST", body: JSON.stringify({ rating: ratingSelected }) });
     state.ratings.set(ratingMovie.id, ratingSelected);
@@ -1239,14 +1493,14 @@ document.getElementById("rating-confirm-btn").onclick = async ()=>{
         Promise.resolve(),
     ]);
 
-    toast("Your rating has been saved.");
+    toast(t("toast_rating_saved"));
     document.getElementById("rating-overlay").classList.remove("open");
     syncActionButtonsForMovie(ratingMovie.id);
     if(state.page === "ratings" || state.page === "watched" || state.page === "watchlist") loadListPage(state.page);
   } catch(err){
     toast(err.message);
   } finally {
-    btn.disabled = false; btn.textContent = "Confirm";
+    btn.disabled = false; btn.textContent = t("rating_confirm");
   }
 };
 document.getElementById("rating-delete-btn").onclick = async ()=>{
@@ -1254,7 +1508,7 @@ document.getElementById("rating-delete-btn").onclick = async ()=>{
   try{
     await api(`/api/rating/${ratingMovie.id}`, { method:"DELETE" });
     state.ratings.delete(ratingMovie.id);
-    toast("Rating removed.");
+    toast(t("toast_rating_removed"));
     document.getElementById("rating-overlay").classList.remove("open");
     syncActionButtonsForMovie(ratingMovie.id);
     if(state.page === "ratings") loadListPage("ratings");
@@ -1272,7 +1526,7 @@ document.getElementById("delete-account-overlay").addEventListener("click", (e)=
 });
 document.getElementById("delete-account-confirm-btn").onclick = async ()=>{
   const btn = document.getElementById("delete-account-confirm-btn");
-  btn.disabled = true; btn.textContent = "Deleting...";
+  btn.disabled = true; btn.textContent = t("deleting");
   try{
     const data = await api("/api/delete", { method:"DELETE" });
     document.getElementById("delete-account-overlay").classList.remove("open");
@@ -1297,7 +1551,7 @@ function openDetail(movie){
   const userRating = state.ratings.get(movie.id);
   document.getElementById("detail-rating").innerHTML =
     (rating ? `★ ${Number(rating).toFixed(1)} / 10` : "") +
-    (userRating ? ` <span class="detail-user-rating-pill">★ Your rating: ${userRating}/10</span>` : "");
+    (userRating ? ` <span class="detail-user-rating-pill">${t('your_rating_star_x', userRating)}</span>` : "");
 
   // Genre tags are clickable through to a genre-browsing page — but that page is keyed by
   // the ENGLISH genre name (that's what /api/genre/<name> and the database both use), even
@@ -1314,7 +1568,7 @@ function openDetail(movie){
     tag.onclick = ()=>{ document.getElementById("detail-overlay").classList.remove("open"); goToPage("genre", tag.dataset.genre); };
   });
 
-  document.getElementById("detail-overview").textContent = localizedOverview(movie) || "No overview available.";
+  document.getElementById("detail-overview").textContent = localizedOverview(movie) || t("detail_no_overview");
 
   // Same idea for director/cast names — clickable through to that person's filmography
   // (see /api/director/<name> and /api/cast/<name> in main.py). Names aren't translated,
@@ -1322,11 +1576,11 @@ function openDetail(movie){
   const people = [];
   if(movie.directors){
     const names = String(movie.directors).split(",").map(d=>d.trim()).filter(Boolean);
-    people.push(`<div><strong>Director</strong>${names.map(name=>`<span class="person-link" data-role="director" data-name="${name}">${name}</span>`).join(", ")}</div>`);
+    people.push(`<div><strong>${t('detail_director')}</strong>${names.map(name=>`<span class="person-link" data-role="director" data-name="${name}">${name}</span>`).join(", ")}</div>`);
   }
   if(movie.cast){
     const names = String(movie.cast).split(",").map(c=>c.trim()).filter(Boolean).slice(0,5);
-    people.push(`<div><strong>Cast</strong>${names.map(name=>`<span class="person-link" data-role="actor" data-name="${name}">${name}</span>`).join(", ")}</div>`);
+    people.push(`<div><strong>${t('detail_cast')}</strong>${names.map(name=>`<span class="person-link" data-role="actor" data-name="${name}">${name}</span>`).join(", ")}</div>`);
   }
   document.getElementById("detail-people").innerHTML = people.join("");
   document.querySelectorAll("#detail-people .person-link").forEach(el=>{
@@ -1352,7 +1606,7 @@ function renderDetailActions(movie){
     return `<div class="icon-btn ${active?'active':''}" data-action="${action}">${meta.icon} ${label}</div>`;
   }).join("");
   const rated = state.ratings.has(movie.id);
-  const rateBtn = `<div class="icon-btn ${rated?'active':''}" data-action="rate">★ ${rated ? "Edit your rating" : "Rate"}</div>`;
+  const rateBtn = `<div class="icon-btn ${rated?'active':''}" data-action="rate">★ ${rated ? t("action_edit_rating") : t("action_rate_label")}</div>`;
   wrap.innerHTML = toggleBtns + rateBtn;
   wrap.querySelectorAll(".icon-btn").forEach(btn=>{
     btn.onclick = ()=>{
@@ -1368,7 +1622,7 @@ function syncDetailActionButtons(movieId){
   const userRating = state.ratings.get(movieId);
   document.getElementById("detail-rating").innerHTML =
     (rating ? `★ ${Number(rating).toFixed(1)} / 10` : "") +
-    (userRating ? ` <span class="detail-user-rating-pill">★ Your rating: ${userRating}/10</span>` : "");
+    (userRating ? ` <span class="detail-user-rating-pill">${t('your_rating_star_x', userRating)}</span>` : "");
 }
 document.getElementById("detail-close").onclick = ()=> document.getElementById("detail-overlay").classList.remove("open");
 document.getElementById("detail-overlay").onclick = (e)=>{
@@ -1380,8 +1634,20 @@ document.getElementById("detail-overlay").onclick = (e)=>{
 // filmography is public, unlike the personal lists (watchlist, favourites,
 // watched, your ratings) which obviously need to know WHO's asking.
 const PUBLIC_PAGES = ["home", "results", "top250", "genres", "genre", "actor", "director"];
+// English genre name -> Turkish name, used only to show a translated page TITLE on a
+// /api/genre/<name> page (see the "genre" branch below) — warmed once at boot (bottom of
+// this file) with a fire-and-forget fetch, since it's low priority (a title, not data the
+// page's own movies depend on) and the movies themselves are already correctly localized
+// regardless of whether this cache has resolved yet.
+let genreNameCache = {};
+async function warmGenreNameCache(){
+  try{
+    const genres = await api("/api/genres");
+    genres.forEach(g => { genreNameCache[g.name] = g.name_tr; });
+  } catch(e){ /* not critical — genre page titles just stay in English if this fails */ }
+}
 function goToPage(page, param){
-  if(!PUBLIC_PAGES.includes(page) && !state.user){ toast("You need to log in first."); openModal("login"); return; }
+  if(!PUBLIC_PAGES.includes(page) && !state.user){ toast(t("toast_login_required")); openModal("login"); return; }
   state.page = page;
   state.pageParam = param ?? null;
   window.scrollTo({ top: 0, behavior: "instant" });
@@ -1401,7 +1667,7 @@ function renderCurrentPage(){
     return;
   }
   if(state.page === "top250"){
-    root.innerHTML = richListTemplate("Top 250", "The 250 highest-rated movies in the whole catalogue.");
+    root.innerHTML = richListTemplate(t("top250_title"), t("top250_sub"));
     loadRichList("/api/top250");
     return;
   }
@@ -1412,7 +1678,13 @@ function renderCurrentPage(){
   }
   if(state.page === "genre"){
     const genre = state.pageParam;
-    root.innerHTML = richListTemplate(`${genre} Movies`, `The best ${genre} movies, sorted by rating.`);
+    // The page title shows the TRANSLATED genre name when one's cached (warmGenreNameCache()
+    // fetches /api/genres once at boot — see the bottom of this file) — genre itself stays
+    // the English identifier the API call below needs, same reasoning as the genre tags in
+    // openDetail(). Falls back to the English name if the cache isn't warm yet (e.g. this is
+    // reached before boot's fetch resolves), which just means the title briefly shows English.
+    const genreLabel = state.lang === "tr" ? (genreNameCache[genre] || genre) : genre;
+    root.innerHTML = richListTemplate(t("genre_movies_title", genreLabel), t("genre_movies_sub", genreLabel));
     loadRichList(`/api/genre/${encodeURIComponent(genre)}`);
     return;
   }
@@ -1423,7 +1695,7 @@ function renderCurrentPage(){
       <section class="section" style="border-top:none;">
         <div class="page-header">
           <h2>${personName}</h2>
-          <button class="btn btn-ghost btn-sm" id="back-home-btn">← Home</button>
+          <button class="btn btn-ghost btn-sm" id="back-home-btn">${t("back_home")}</button>
         </div>
         <div class="results-grid" id="list-grid">${skeletonCards(8, true)}</div>
       </section>`;
@@ -1435,12 +1707,12 @@ function renderCurrentPage(){
     loadListPage(state.page, endpoint, `${personName}'s filmography`);
     return;
   }
-  const titles = { watchlist: "Watchlist", favourites: "Favourites", watched: "Watched", ratings: "Your Ratings" };
+  const titles = { watchlist: t("watchlist_title"), favourites: t("favourites_title"), watched: t("watched_title"), ratings: t("ratings_title") };
   root.innerHTML = `
     <section class="section" style="border-top:none;">
       <div class="page-header">
         <h2>${titles[state.page]}</h2>
-        <button class="btn btn-ghost btn-sm" id="back-home-btn">← Home</button>
+        <button class="btn btn-ghost btn-sm" id="back-home-btn">${t("back_home")}</button>
       </div>
       <div class="results-grid" id="list-grid">${skeletonCards(8, true)}</div>
     </section>`;
@@ -1459,11 +1731,11 @@ async function loadListPage(page, endpointOverride, emptyLabel){
     grid.innerHTML = "";
     if(!items.length){
       const meta = {
-        watchlist:  { icon: "＋", title: "Your watchlist is empty",   sub: "Use the ＋ button on any movie card to add it to your watchlist." },
-        favourites: { icon: "♥", title: "No favourites yet",          sub: "Use the ♥ button on any movie card to add it to your favourites." },
-        watched:    { icon: "✓", title: "Nothing watched yet",        sub: "Use the ✓ button on any movie card to mark it as watched." },
-        ratings:    { icon: "★", title: "Nothing rated yet",          sub: "Use the ★ button on any movie card to rate it from 1 to 10." },
-      }[page] || { icon: "🎬", title: emptyLabel ? `No movies found for ${emptyLabel}` : "Nothing here yet", sub: "" };
+        watchlist:  { icon: "＋", title: t("watchlist_empty_title"),   sub: t("watchlist_empty_sub") },
+        favourites: { icon: "♥", title: t("favourites_empty_title"),          sub: t("favourites_empty_sub") },
+        watched:    { icon: "✓", title: t("watched_empty_title"),        sub: t("watched_empty_sub") },
+        ratings:    { icon: "★", title: t("ratings_empty_title"), sub: t("ratings_empty_sub") },
+      }[page] || { icon: "🎬", title: emptyLabel ? t("no_movies_found_for", emptyLabel) : t("nothing_here"), sub: "" };
       grid.innerHTML = `
         <div class="page-empty">
           <div class="page-empty-icon">${meta.icon}</div>
@@ -1474,7 +1746,7 @@ async function loadListPage(page, endpointOverride, emptyLabel){
     }
     items.forEach(m => grid.appendChild(movieCard(m)));
   } catch(err){
-    grid.innerHTML = `<div class="empty-note">Could not load this: ${err.message}</div>`;
+    grid.innerHTML = `<div class="empty-note">${t("could_not_load", err.message)}</div>`;
   }
 }
 // ---------- Top 250 / genre-browsing pages ----------
@@ -1491,7 +1763,7 @@ function richListTemplate(title, subtitle){
           <h2>${title}</h2>
           <div class="section-sub">${subtitle}</div>
         </div>
-        <button class="btn btn-ghost btn-sm" id="back-home-btn">← Home</button>
+        <button class="btn btn-ghost btn-sm" id="back-home-btn">${t("back_home")}</button>
       </div>
       <div class="rec-list" id="rich-list-grid"></div>
     </section>`;
@@ -1503,10 +1775,10 @@ async function loadRichList(endpoint){
   try{
     const movies = await api(endpoint);
     grid.innerHTML = "";
-    if(!movies.length){ grid.innerHTML = '<div class="empty-note">No movies found.</div>'; return; }
+    if(!movies.length){ grid.innerHTML = `<div class="empty-note">${t("no_movies_found")}</div>`; return; }
     movies.forEach((m, i) => grid.appendChild(recCard(m, i+1)));
   } catch(err){
-    grid.innerHTML = `<div class="empty-note">Could not load this: ${err.message}</div>`;
+    grid.innerHTML = `<div class="empty-note">${t("could_not_load", err.message)}</div>`;
   }
 }
 
@@ -1514,12 +1786,12 @@ async function loadRichList(endpoint){
 function resultsTemplate(){
   const r = state.results || {};
   const isMulti = r.type === "multi";
-  const headerTitle = r.type === "single" ? `Recommendations for “${r.title}”` : "Combined Recommendations";
+  const headerTitle = r.type === "single" ? t("recommendations_for", r.title) : t("combined_recommendations");
   const multiPickerHtml = isMulti ? `
     <div class="multi-input-strip" style="text-align:center;">
-      <div class="panel-hint" style="margin-bottom:14px;">You can change these movies and get new recommendations - remove one, add another, whatever you like.</div>
+      <div class="panel-hint" style="margin-bottom:14px;">${t("multi_hint")}</div>
       <div class="picker" id="picker"></div>
-      <button class="btn btn-accent" id="multi-btn" disabled style="opacity:.4; padding:10px 32px;">Get New Recommendations</button>
+      <button class="btn btn-accent" id="multi-btn" disabled style="opacity:.4; padding:10px 32px;">${t("get_new_recommendations")}</button>
     </div>` : "";
   // The "search another movie" bar from single-movie results would be redundant here -
   // the picker above already lets you swap movies in and out and get fresh recommendations.
@@ -1527,8 +1799,8 @@ function resultsTemplate(){
     <div class="search-panel rec-search-panel">
       <div class="search-row">
         <span class="search-icon">🔍</span>
-        <input type="text" id="results-search-input" placeholder="Search another movie..." autocomplete="off">
-        <button class="btn btn-accent" id="results-search-btn">Recommend</button>
+        <input type="text" id="results-search-input" placeholder="${t("search_another_movie_ph")}" autocomplete="off">
+        <button class="btn btn-accent" id="results-search-btn">${t("recommend")}</button>
         <div id="results-autocomplete"></div>
       </div>
     </div>` : "";
@@ -1536,14 +1808,14 @@ function resultsTemplate(){
   <section class="section" style="border-top:none;">
     <div class="page-header">
       <h2>${headerTitle}</h2>
-      <button class="btn btn-ghost btn-sm" id="back-home-btn">← Home</button>
+      <button class="btn btn-ghost btn-sm" id="back-home-btn">${t("back_home")}</button>
     </div>
     ${multiPickerHtml}
     ${singleSearchHtml}
     <div class="searched-hero" id="searched-hero" style="display:none;"></div>
     <div class="results-toolbar">
       <div class="section-sub" id="results-count"></div>
-      ${isMulti ? "" : `<button class="btn btn-ghost btn-sm" id="requery-btn">↻ Get New Recommendations</button>`}
+      ${isMulti ? "" : `<button class="btn btn-ghost btn-sm" id="requery-btn">↻ ${t("get_new_recommendations")}</button>`}
     </div>
     <div class="rec-list" id="results-grid"></div>
   </section>`;
@@ -1584,15 +1856,15 @@ function renderResultsGrid(){
   const countEl = document.getElementById("results-count");
   if(!grid) return;
   const movies = (state.results && state.results.movies) || [];
-  if(countEl) countEl.textContent = movies.length ? `${movies.length} recommendations - sorted by rating` : "";
+  if(countEl) countEl.textContent = movies.length ? t("n_recommendations_sorted", movies.length) : "";
   grid.innerHTML = "";
-  if(!movies.length){ grid.innerHTML = '<div class="empty-note">No results found.</div>'; return; }
+  if(!movies.length){ grid.innerHTML = `<div class="empty-note">${t("no_results_found")}</div>`; return; }
   movies.forEach((m, i) => grid.appendChild(recCard(m, i+1)));
 }
 async function rerunResults(){
   if(!state.results) return;
   const btn = document.getElementById("requery-btn");
-  if(btn){ btn.disabled = true; btn.textContent = "↺ Loading..."; }
+  if(btn){ btn.disabled = true; btn.textContent = t("loading"); }
   try{
     let pool = state.results.pool;
     if(!pool || !pool.length){
@@ -1612,11 +1884,11 @@ async function rerunResults(){
     }
     state.results.movies = sortByRating(nextBatch(state.results, 10));
     renderResultsGrid();
-    toast("Recommendations refreshed.");
+    toast(t("toast_recommendations_refreshed"));
   } catch(err){
     toast(err.message);
   } finally {
-    if(btn){ btn.disabled = false; btn.textContent = "↻ Get New Recommendations"; }
+    if(btn){ btn.disabled = false; btn.textContent = "↻ " + t("get_new_recommendations"); }
   }
 }
 
@@ -1624,33 +1896,33 @@ async function rerunResults(){
 function homeTemplate(){
   return `
   <section class="hero">
-    <div class="eyebrow">What should you watch tonight?</div>
-    <h1>Tell me a movie,<br>I will find its match.</h1>
-    <p>A hybrid recommendation engine built on content and ratings - tell it what you love, and it will find you more like it.</p>
+    <div class="eyebrow">${t("hero_eyebrow")}</div>
+    <h1>${t("hero_title1")}<br>${t("hero_title2")}</h1>
+    <p>${t("hero_sub")}</p>
   </section>
 
   <section class="section" id="search-section" style="border-top:none; padding-top:0;">
     <div class="search-panel">
       <div class="segmented" id="segmented">
-        <button class="seg-btn active" id="tab-single" data-tab="single">Single Movie</button>
-        <button class="seg-btn" id="tab-multi" data-tab="multi">Multiple Movies</button>
+        <button class="seg-btn active" id="tab-single" data-tab="single">${t("tab_single")}</button>
+        <button class="seg-btn" id="tab-multi" data-tab="multi">${t("tab_multi")}</button>
         <div class="seg-thumb" id="seg-thumb"></div>
       </div>
 
       <div class="tab-panel" id="panel-single">
-        <p class="panel-hint">Type the name of a movie you love, and we will find you more like it.</p>
+        <p class="panel-hint">${t("panel_hint_single")}</p>
         <div class="search-row">
           <span class="search-icon">🔍</span>
-          <input type="text" id="single-input" placeholder="e.g. Inception" autocomplete="off">
-          <button class="btn btn-accent" id="single-btn">Recommend</button>
+          <input type="text" id="single-input" placeholder="${t("single_input_ph")}" autocomplete="off">
+          <button class="btn btn-accent" id="single-btn">${t("recommend")}</button>
           <div id="autocomplete"></div>
         </div>
       </div>
 
       <div class="tab-panel" id="panel-multi" style="display:none;">
-        <p class="panel-hint">Click a card and type a movie name - add at least 2 to activate "Recommend".</p>
+        <p class="panel-hint">${t("panel_hint_multi")}</p>
         <div class="picker" id="picker"></div>
-        <button class="btn btn-accent btn-wide" id="multi-btn" disabled style="opacity:.4;">Recommend</button>
+        <button class="btn btn-accent btn-wide" id="multi-btn" disabled style="opacity:.4;">${t("recommend")}</button>
       </div>
     </div>
   </section>
@@ -1658,8 +1930,8 @@ function homeTemplate(){
   <section class="section" id="popular-section">
     <div class="section-head">
       <div>
-        <h2><span class="num">Trending</span> Today</h2>
-        <div class="section-sub">The movies everyone's talking about on TMDB right now</div>
+        <h2><span class="num">${t("trending_num")}</span> ${t("trending_rest")}</h2>
+        <div class="section-sub">${t("trending_sub")}</div>
       </div>
     </div>
     <div class="row-scroll" id="popular-row">
@@ -1671,8 +1943,8 @@ function homeTemplate(){
   <section class="section" id="home-favourites-section">
     <div class="section-head">
       <div>
-        <h2><span class="num">Your</span> Favourites</h2>
-        <div class="section-sub">Pick a few movies you love, and we will fine-tune your recommendations around them</div>
+        <h2><span class="num">${t("your_num")}</span> ${t("favourites_rest")}</h2>
+        <div class="section-sub">${t("favourites_sub")}</div>
       </div>
     </div>
     <div class="row-scroll" id="home-fav-picker"></div>
@@ -1764,10 +2036,10 @@ async function loadPopular(){
   try{
     const movies = await api("/api/popular");
     row.innerHTML = "";
-    if(!movies.length){ row.innerHTML = '<div class="empty-note">No trending movies have been fetched for today yet.</div>'; return; }
+    if(!movies.length){ row.innerHTML = `<div class="empty-note">${t("trending_empty")}</div>`; return; }
     movies.forEach(m => row.appendChild(movieCard(m)));
   } catch(err){
-    row.innerHTML = `<div class="empty-note">Could not load trending movies: ${err.message}</div>`;
+    row.innerHTML = `<div class="empty-note">${t("could_not_load_trending", err.message)}</div>`;
   }
 }
 // ---------- genre-selection page (reached via the header's "Genres" nav link) ----------
@@ -1782,14 +2054,14 @@ function genresIndexTemplate(){
     <section class="section" style="border-top:none;">
       <div class="page-header">
         <div>
-          <h2>Browse by Genre</h2>
-          <div class="section-sub">Search or pick a genre to see its best movies, sorted by rating.</div>
+          <h2>${t("genres_title")}</h2>
+          <div class="section-sub">${t("genres_sub")}</div>
         </div>
-        <button class="btn btn-ghost btn-sm" id="back-home-btn">← Home</button>
+        <button class="btn btn-ghost btn-sm" id="back-home-btn">${t("back_home")}</button>
       </div>
       <div class="search-row" style="max-width:420px; margin-bottom:24px;">
         <span class="search-icon">🔍</span>
-        <input type="text" id="genres-index-search" placeholder="Search genres..." autocomplete="off">
+        <input type="text" id="genres-index-search" placeholder="${t("genres_search_ph")}" autocomplete="off">
       </div>
       <div class="genre-chip-row" id="genres-index-grid"></div>
     </section>`;
@@ -1805,7 +2077,7 @@ async function loadGenresIndex(){
     const filtered = q
       ? allGenres.filter(g => g.name.toLowerCase().includes(q) || (g.name_tr || "").toLowerCase().includes(q))
       : allGenres;
-    if(!filtered.length){ grid.innerHTML = '<div class="empty-note">No genres match your search.</div>'; return; }
+    if(!filtered.length){ grid.innerHTML = `<div class="empty-note">${t("no_genres_match")}</div>`; return; }
     grid.innerHTML = filtered.map(g=>
       `<div class="genre-chip" data-genre="${g.name}">${state.lang === "tr" ? g.name_tr : g.name}</div>`
     ).join("");
@@ -1817,9 +2089,10 @@ async function loadGenresIndex(){
   searchInput.addEventListener("input", renderFiltered);
   try{
     allGenres = await api("/api/genres");
+    allGenres.forEach(g => { genreNameCache[g.name] = g.name_tr; }); // keep the shared cache warm too, in case a genre page is opened later this session
     renderFiltered();
   } catch(err){
-    grid.innerHTML = `<div class="empty-note">Could not load genres: ${err.message}</div>`;
+    grid.innerHTML = `<div class="empty-note">${t("could_not_load_genres", err.message)}</div>`;
   }
 }
 
@@ -1851,7 +2124,7 @@ function nextBatch(results, size){
   return batch;
 }
 async function performSingleSearch(title, preMovie){
-  if(!title){ toast("Type a movie title."); return; }
+  if(!title){ toast(t("toast_type_movie_title")); return; }
   // Where the delay used to come from: these three requests fired one after another -
   // /api/search, then /api/recommend, then (if the overview was missing) /api/movie/<id>.
   // Each one is a separate network round trip, so the total wait was the sum of all three.
@@ -1860,7 +2133,7 @@ async function performSingleSearch(title, preMovie){
   const searchPromise = preMovie ? Promise.resolve(null) : apiSafe(`/api/search?q=${encodeURIComponent(title)}`);
   const moviesPromise = api(`/api/recommend?title=${encodeURIComponent(title)}&top_n=60`);
   const [items, movies] = await Promise.all([searchPromise, moviesPromise]);
-  if(!movies.length){ toast("Could not find that movie - make sure the title is spelled correctly."); return; }
+  if(!movies.length){ toast(t("toast_movie_not_found")); return; }
 
   let movieInfo = preMovie || null;
   if(!movieInfo){
@@ -1898,16 +2171,16 @@ async function performSingleSearch(title, preMovie){
 async function runSingleSearch(preMovie){
   const inputEl = document.getElementById("single-input");
   const title = (preMovie ? preMovie.title : inputEl.value.trim());
-  if(!title){ toast("Type a movie title."); return; }
+  if(!title){ toast(t("toast_type_movie_title")); return; }
   closeAutocomplete();
   const btn = document.getElementById("single-btn");
-  if(btn){ btn.disabled = true; btn.textContent = "Searching..."; }
+  if(btn){ btn.disabled = true; btn.textContent = t("searching"); }
   try{
     await performSingleSearch(title, preMovie);
   } catch(err){
     toast(err.message);
   } finally {
-    if(btn){ btn.disabled = false; btn.textContent = "Recommend"; }
+    if(btn){ btn.disabled = false; btn.textContent = t("recommend"); }
   }
 }
 // ---------- autocomplete for the results-page search bar (same behaviour as the homepage one) ----------
@@ -1961,17 +2234,17 @@ function closeResultsAutocomplete(){
 async function runResultsSearch(preMovie){
   const inputEl = document.getElementById("results-search-input");
   const title = preMovie ? preMovie.title : inputEl.value.trim();
-  if(!title){ toast("Type a movie title."); return; }
+  if(!title){ toast(t("toast_type_movie_title")); return; }
   closeResultsAutocomplete();
   const btn = document.getElementById("results-search-btn");
-  if(btn){ btn.disabled = true; btn.textContent = "Searching..."; }
+  if(btn){ btn.disabled = true; btn.textContent = t("searching"); }
   try{
     await performSingleSearch(title, preMovie);
   } catch(err){
     toast(err.message);
   } finally {
     const btn2 = document.getElementById("results-search-btn");
-    if(btn2){ btn2.disabled = false; btn2.textContent = "Recommend"; }
+    if(btn2){ btn2.disabled = false; btn2.textContent = t("recommend"); }
   }
 }
 function renderSearchedHero(movie){
@@ -1984,7 +2257,7 @@ function renderSearchedHero(movie){
   hero.innerHTML = `
     <div class="rec-poster">
       <img src="${poster(movie.poster_path,'lg')}" alt="${localizedTitle(movie)}">
-      ${userRating ? `<div class="user-rating-badge" title="Your rating: ${userRating}/10">${userRating}</div>` : ""}
+      ${userRating ? `<div class="user-rating-badge" title="${t('your_rating_x', userRating)}">${userRating}</div>` : ""}
     </div>
     <div class="rec-score">
       <div class="rec-score-label">TMDB</div>
@@ -1996,16 +2269,16 @@ function renderSearchedHero(movie){
       <span class="hero-badge">🎬 Your search</span>
       <div class="rec-title">${localizedTitle(movie)}</div>
       ${genres.length ? `<div class="rec-genres">${genres.map(g=>`<span class="genre-tag">${g.trim()}</span>`).join("")}</div>` : ""}
-      ${movie.directors ? `<div class="rec-crew"><strong>Director</strong>${movie.directors}</div>` : ""}
-      ${movie.cast ? `<div class="rec-crew"><strong>Cast</strong>${String(movie.cast).split(",").slice(0,4).join(", ")}</div>` : ""}
+      ${movie.directors ? `<div class="rec-crew"><strong>${t('detail_director')}</strong>${movie.directors}</div>` : ""}
+      ${movie.cast ? `<div class="rec-crew"><strong>${t('detail_cast')}</strong>${String(movie.cast).split(",").slice(0,4).join(", ")}</div>` : ""}
       ${localizedOverview(movie) ? `<div class="rec-overview rec-overview-lg">${localizedOverview(movie)}</div>` : ""}
       <div class="rec-actions" data-movie-id="${movie.id}">
-        <div class="icon-btn ${state.favourites.has(movie.id)?'active':''}" data-action="favourites" title="Add to favourites">♥</div>
-        <div class="icon-btn ${state.watchlist.has(movie.id)?'active':''}" data-action="watchlist" title="Add to watchlist">＋</div>
-        <div class="icon-btn ${state.watched.has(movie.id)?'active':''}" data-action="watched" title="Mark as watched">✓</div>
-        <div class="icon-btn ${state.ratings.has(movie.id)?'active':''}" data-action="rate" title="Rate this">★</div>
+        <div class="icon-btn ${state.favourites.has(movie.id)?'active':''}" data-action="favourites" title="${t('action_add_favourite')}">♥</div>
+        <div class="icon-btn ${state.watchlist.has(movie.id)?'active':''}" data-action="watchlist" title="${t('action_add_watchlist')}">＋</div>
+        <div class="icon-btn ${state.watched.has(movie.id)?'active':''}" data-action="watched" title="${t('action_mark_watched')}">✓</div>
+        <div class="icon-btn ${state.ratings.has(movie.id)?'active':''}" data-action="rate" title="${t('action_rate')}">★</div>
       </div>
-      <div class="rec-hint">↗ Click for details</div>
+      <div class="rec-hint">${t('click_for_details_arrow')}</div>
     </div>`;
   hero.style.display = "flex";
   hero.querySelectorAll(".icon-btn").forEach(btn=>{
@@ -2077,8 +2350,8 @@ function favouriteCard(movie){
   const userRating = movie.user_rating ?? movie.rating ?? state.ratings.get(movie.id);
   div.innerHTML = `
     <img class="poster" src="${poster(movie.poster_path)}" alt="${localizedTitle(movie)}" loading="lazy">
-    ${userRating ? `<div class="user-rating-badge" title="Your rating: ${userRating}/10">${userRating}</div>` : ""}
-    <div class="remove fav-remove" title="Remove from favourites">✕</div>`;
+    ${userRating ? `<div class="user-rating-badge" title="${t('your_rating_x', userRating)}">${userRating}</div>` : ""}
+    <div class="remove fav-remove" title="${t('action_remove_favourite')}">✕</div>`;
   div.querySelector(".fav-remove").onclick = async (e)=>{
     e.stopPropagation();
     try{
@@ -2087,7 +2360,7 @@ function favouriteCard(movie){
       state.favouriteMovies = state.favouriteMovies.filter(m => m.id !== movie.id);
       renderFavouritesStrip();
       syncActionButtonsForMovie(movie.id);
-      toast("Removed from favourites.");
+      toast(t("toast_removed_from_favourites"));
     } catch(err){ toast(err.message); }
   };
   div.addEventListener("click", ()=> openDetail(movie));
@@ -2130,7 +2403,7 @@ async function fetchSlotSearchResults(){
   // response - otherwise a race condition could leave stale results (or a false "not found") on screen.
   if(myRequestId !== slotSearchRequestId) return;
   const list = Array.isArray(items) ? items : (items.items || []);
-  if(!list.length){ results.innerHTML = '<div class="empty-note">No results found.</div>'; return; }
+  if(!list.length){ results.innerHTML = `<div class="empty-note">${t("no_results_found")}</div>`; return; }
   results.innerHTML = list.slice(0,8).map((item, idx)=>{
     const rating = item.display_rating ?? item.vote_avg;
     return `<div class="ac-item" data-idx="${idx}">
@@ -2182,7 +2455,7 @@ function setupSlotSearchModal(){
 }
 async function addFavouriteToSlot(item){
   if(state.favourites.size >= FAVOURITES_LIMIT && !state.favourites.has(item.id)){
-    toast("Your favourites list is full - remove one first.");
+    toast(t("toast_favourites_full"));
     return;
   }
   // Close the modal and show the movie in the strip IMMEDIATELY (optimistic UI) instead of
@@ -2200,7 +2473,7 @@ async function addFavouriteToSlot(item){
 
   try{
     await api(`/api/favourites/${item.id}`, { method:"POST" });
-    toast("Added to favourites.");
+    toast(t("toast_added_to_favourites"));
     // `item` here comes from /api/search, which only returns lightweight fields
     // (title/poster/rating) - no overview, director or cast. Fill those in quietly in the
     // background, once the movie is already visible on screen, so the detail view has
@@ -2234,15 +2507,15 @@ async function addFavouriteToSlot(item){
 async function runMultiSearch(){
   const titles = state.slots.filter(Boolean).map(s => s.title);
   const btn = document.getElementById("multi-btn");
-  const originalLabel = btn ? btn.textContent : "Recommend";
-  if(btn){ btn.disabled = true; btn.textContent = "Searching..."; }
+  const originalLabel = btn ? btn.textContent : t("recommend");
+  if(btn){ btn.disabled = true; btn.textContent = t("searching"); }
   let navigated = false;
   try{
     const movies = await api("/api/recommend_multi", {
       method:"POST",
       body: JSON.stringify({ titles, top_n: 60 })
     });
-    if(!movies.length){ toast("No results found - double-check the movie titles."); return; }
+    if(!movies.length){ toast(t("toast_no_results_check_titles")); return; }
     const pool = sortByRating(movies);
     const results = { type:"multi", title: titles.join(", "), titles, searchedMovie:null, pool, queue: null };
     results.movies = sortByRating(nextBatch(results, 10));
@@ -2277,9 +2550,11 @@ function switchTab(tab){
 
 // ---------- boot ----------
 setupSlotSearchModal();
+applyStaticTranslations();
 renderAuth();
 checkSession().then(renderCurrentPage);
 renderCurrentPage();
+warmGenreNameCache();
 
 document.getElementById("nav-top250").onclick = ()=> goToPage("top250");
 document.getElementById("nav-genres").onclick = ()=> goToPage("genres");
@@ -2295,6 +2570,8 @@ document.getElementById("lang-toggle").addEventListener("click", (e)=>{
   if(!btn || btn.classList.contains("active")) return;
   state.lang = btn.dataset.lang;
   document.querySelectorAll("#lang-toggle button").forEach(b=> b.classList.toggle("active", b === btn));
+  applyStaticTranslations(); // static modals (login/rating/delete-account/slot-search, footer) aren't touched by renderCurrentPage() below
+  renderAuth(); // the header's login/signup buttons or account dropdown are set by JS too, not by renderCurrentPage()
   renderCurrentPage();
 });
 </script>
