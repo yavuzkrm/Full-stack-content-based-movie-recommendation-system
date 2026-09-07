@@ -895,6 +895,7 @@ const UI_TEXT = {
     n_recommendations_sorted: (n)=>`${n} recommendations - sorted by rating`,
     top250_title: "Top 250", top250_sub: "The 250 highest-rated movies in the whole catalogue.",
     popular_title: "Popular", popular_sub: "What's trending on TMDB today, beyond just the homepage's top 10.",
+    see_all: "See all",
     genre_movies_title: (g)=>`${g} Movies`, genre_movies_sub: (g)=>`The best ${g} movies, sorted by rating.`,
     genres_title: "Browse by Genre",
     genres_sub: "Search or pick a genre to see its best movies, sorted by rating.",
@@ -992,6 +993,7 @@ const UI_TEXT = {
     n_recommendations_sorted: (n)=>`${n} öneri - puana göre sıralı`,
     top250_title: "İlk 250", top250_sub: "Tüm katalogdaki en yüksek puanlı 250 film.",
     popular_title: "Popüler", popular_sub: "Sadece ana sayfadaki ilk 10 değil, bugün TMDB'de trend olan her şey.",
+    see_all: "Tümünü gör",
     genre_movies_title: (g)=>`${g} Filmleri`, genre_movies_sub: (g)=>`En iyi ${g} filmleri, puana göre sıralı.`,
     genres_title: "Türe Göre Keşfet",
     genres_sub: "En iyi filmlerini görmek için bir tür ara ya da seç, puana göre sıralı.",
@@ -1990,6 +1992,7 @@ function homeTemplate(){
         <h2><span class="num">${t("trending_num")}</span> ${t("trending_rest")}</h2>
         <div class="section-sub">${t("trending_sub")}</div>
       </div>
+      <button class="btn btn-ghost btn-sm" id="see-all-popular-btn">${t("see_all")} →</button>
     </div>
     <div class="row-scroll" id="popular-row">
       ${skeletonCards(6, false)}
@@ -2012,6 +2015,7 @@ function homeTemplate(){
 function bindHomeEvents(){
   renderPicker();
   if(state.user) renderFavouritesStrip();
+  document.getElementById("see-all-popular-btn").onclick = ()=> goToPage("popular");
 
   document.getElementById("single-btn").onclick = ()=> runSingleSearch();
   const singleInput = document.getElementById("single-input");
