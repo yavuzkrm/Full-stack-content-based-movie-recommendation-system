@@ -89,11 +89,11 @@ def fetch_and_save_credits(cursor, movie_id):
             # already-stored movie's billing order, no separate one-off migration needed.
             cursor.execute(
                 """
-                INSERT INTO movie_cast (movie_id, person_id, character_name, cast_order)
-                VALUES (%s, %s, %s, %s)
-                ON DUPLICATE KEY UPDATE character_name = VALUES(character_name), cast_order = VALUES(cast_order)
+                INSERT INTO movie_cast (movie_id, person_id, cast_order)
+                VALUES (%s, %s, %s)
+                ON DUPLICATE KEY UPDATE cast_order = VALUES(cast_order)
                 """,
-                (movie_id, person_id, actor.get("character"), actor.get("order"))
+                (movie_id, person_id, actor.get("order"))
             )
 
         time.sleep(0.4)  # a short pause between requests so we don't hammer TMDB's API and get rate-limited
