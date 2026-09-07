@@ -686,6 +686,7 @@
   <div class="header-inner">
     <div class="logo" id="logo-home"><img src="/static/images/logo.png" alt="NextWatch"></div>
     <nav class="main-nav">
+      <button class="nav-link" id="nav-popular">🔥 <span class="nav-link-label" data-i18n="nav_popular_label">Popular</span></button>
       <button class="nav-link" id="nav-top250">🏆 <span class="nav-link-label" data-i18n="nav_top250_label">Top 250</span></button>
       <button class="nav-link" id="nav-genres">🎭 <span class="nav-link-label" data-i18n="nav_genres_label">Genres</span></button>
     </nav>
@@ -832,7 +833,7 @@ function localizedGenres(movie){
 // that needs to embed a variable (a movie title, a count, ...).
 const UI_TEXT = {
   en: {
-    nav_top250_label: "Top 250", nav_genres_label: "Genres",
+    nav_top250_label: "Top 250", nav_genres_label: "Genres", nav_popular_label: "Popular",
     dd_watchlist: "➕ Watchlist", dd_watched: "✓ Watched", dd_ratings: "★ Your Ratings",
     dd_logout: "→ Log Out", dd_delete_account: "🗑 Delete Account",
     login: "Log in", signup: "Sign up",
@@ -893,6 +894,7 @@ const UI_TEXT = {
     no_results_found: "No results found.",
     n_recommendations_sorted: (n)=>`${n} recommendations - sorted by rating`,
     top250_title: "Top 250", top250_sub: "The 250 highest-rated movies in the whole catalogue.",
+    popular_title: "Popular", popular_sub: "What's trending on TMDB today, beyond just the homepage's top 10.",
     genre_movies_title: (g)=>`${g} Movies`, genre_movies_sub: (g)=>`The best ${g} movies, sorted by rating.`,
     genres_title: "Browse by Genre",
     genres_sub: "Search or pick a genre to see its best movies, sorted by rating.",
@@ -928,7 +930,7 @@ const UI_TEXT = {
     filmography_director_sub: (name)=>`Movies directed by ${name}`,
   },
   tr: {
-    nav_top250_label: "İlk 250", nav_genres_label: "Türler",
+    nav_top250_label: "İlk 250", nav_genres_label: "Türler", nav_popular_label: "Popüler",
     dd_watchlist: "➕ İzleme Listesi", dd_watched: "✓ İzlenenler", dd_ratings: "★ Puanların",
     dd_logout: "→ Çıkış Yap", dd_delete_account: "🗑 Hesabı Sil",
     login: "Giriş yap", signup: "Kayıt ol",
@@ -989,6 +991,7 @@ const UI_TEXT = {
     no_results_found: "Sonuç bulunamadı.",
     n_recommendations_sorted: (n)=>`${n} öneri - puana göre sıralı`,
     top250_title: "İlk 250", top250_sub: "Tüm katalogdaki en yüksek puanlı 250 film.",
+    popular_title: "Popüler", popular_sub: "Sadece ana sayfadaki ilk 10 değil, bugün TMDB'de trend olan her şey.",
     genre_movies_title: (g)=>`${g} Filmleri`, genre_movies_sub: (g)=>`En iyi ${g} filmleri, puana göre sıralı.`,
     genres_title: "Türe Göre Keşfet",
     genres_sub: "En iyi filmlerini görmek için bir tür ara ya da seç, puana göre sıralı.",
@@ -1678,7 +1681,7 @@ document.getElementById("detail-overlay").onclick = (e)=>{
 // Pages that don't need a login — browsing Top 250 / a genre / someone's
 // filmography is public, unlike the personal lists (watchlist, favourites,
 // watched, your ratings) which obviously need to know WHO's asking.
-const PUBLIC_PAGES = ["home", "results", "top250", "genres", "genre", "actor", "director"];
+const PUBLIC_PAGES = ["home", "results", "popular", "top250", "genres", "genre", "actor", "director"];
 // English genre name -> Turkish name, used only to show a translated page TITLE on a
 // /api/genre/<name> page (see the "genre" branch below) — warmed once at boot (bottom of
 // this file) with a fire-and-forget fetch, since it's low priority (a title, not data the
@@ -1709,6 +1712,11 @@ function renderCurrentPage(){
   if(state.page === "results"){
     root.innerHTML = resultsTemplate();
     bindResultsEvents();
+    return;
+  }
+  if(state.page === "popular"){
+    root.innerHTML = richListTemplate(t("popular_title"), t("popular_sub"));
+    loadRichList("/api/popular/all");
     return;
   }
   if(state.page === "top250"){
@@ -2605,6 +2613,7 @@ checkSession().then(renderCurrentPage);
 renderCurrentPage();
 warmGenreNameCache();
 
+document.getElementById("nav-popular").onclick = ()=> goToPage("popular");
 document.getElementById("nav-top250").onclick = ()=> goToPage("top250");
 document.getElementById("nav-genres").onclick = ()=> goToPage("genres");
 
