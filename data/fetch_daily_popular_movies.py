@@ -1,11 +1,19 @@
 import sys
 import os
+import time
+import math
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 from config import TMDB_API_KEY, TMDB_BASE_URL, cnxpool
 from data.fetch_movies import fetch_and_save_credits, fetch_and_save_keywords
 from data.fetch_translations import fetch_and_save_movie_translation
 import requests
 import mysql.connector
+
+# How many of the day's trending movies to keep around in `popular_today`. The homepage's
+# "Trending Today" ROW still only ever shows the first 10 of these (see main.py's
+# /api/popular route) — this larger pool is what backs the separate, full "Popular" page
+# (/api/popular/all), the same way the whole catalogue backs Top 250 and browse-by-genre.
+TRENDING_POOL_SIZE = 100
 
 
 def get_db():
@@ -44,10 +52,23 @@ def fetch_popular_movie():
     conn = get_db()
     cursor = conn.cursor()
 
-    url = f"{TMDB_BASE_URL}/trending/movie/day"
-    params = {"api_key": TMDB_API_KEY, "language": "en-US"}
-    res = requests.get(url, params=params)
-    data = res.json().get("results", [])[:10]
+    # TMDB's list endpoints (trending included) return 20 results per page, so getting
+    # TRENDING_POOL_SIZE movies means asking for however many pages that takes — same
+    # "page through TMDB, one request per page, short pause between them" shape as
+    # fetch_movies.py's main import, just a handful of pages instead of hundreds.
+    data = []
+    pages_needed = math.ceil(TRENDING_POOL_SIZE / 20)
+    for page in range(1, pages_needed + 1):
+        url = f"{TMDB_BASE_URL}/trending/movie/day"
+        params = {"api_key": TMDB_API_KEY, "language": "en-US", "page": page}
+        res = requests.get(url, params=params)
+        page_results = res.json().get("results", [])
+        if not page_results:
+            break  # TMDB ran out of trending movies before we hit our target — just take what we got
+        data.extend(page_results)
+        if page < pages_needed:
+            time.sleep(0.4)  # same rate-limit courtesy pause used everywhere else in data/
+    data = data[:TRENDING_POOL_SIZE]
 
     for m in data:
         # INSERT IGNORE: if this movie is already in our catalogue, this is a
