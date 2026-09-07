@@ -119,11 +119,10 @@ CREATE TABLE IF NOT EXISTS people (
     name VARCHAR(255) NOT NULL
 );
 
--- Which actors appear in which movies (and as which character).
+-- Which actors appear in which movies.
 CREATE TABLE IF NOT EXISTS movie_cast (
     movie_id INT,
     person_id INT,
-    character_name VARCHAR(255),
     cast_order INT, -- TMDB's "order" field, which is the actor's billing order in the credits
     PRIMARY KEY (movie_id, person_id), -- composite key: one row per (movie, actor) pair
     FOREIGN KEY (movie_id) REFERENCES movies(id) ON DELETE CASCADE,
@@ -164,26 +163,4 @@ CREATE TABLE movie_keywords (
     PRIMARY KEY (movie_id, keyword_id),
     FOREIGN KEY (movie_id) REFERENCES movies(id) ON DELETE CASCADE,
     FOREIGN KEY (keyword_id) REFERENCES keywords(id) ON DELETE CASCADE
-);
-
-
--- ================================================
--- Migration: Turkish title/overview/genre-name support
--- ================================================
--- Everything above this line already has title_tr/overview_tr/name_tr baked
--- into the CREATE TABLE statements — but those only apply the FIRST time this
--- file runs against a brand-new, empty database. `CREATE TABLE IF NOT EXISTS`
--- is a no-op against a database that already has a `movies`/`genres` table
--- (which yours does, if you're reading this), so it silently will NOT add
--- these columns retroactively. Run the two lines below ONCE, by hand,
--- against your existing database to catch it up:
---
---   ALTER TABLE movies ADD COLUMN title_tr VARCHAR(300);
---   ALTER TABLE movies ADD COLUMN overview_tr TEXT;
---   ALTER TABLE genres ADD COLUMN name_tr VARCHAR(100);
---
--- (Left commented out rather than run automatically, since re-running an
--- ADD COLUMN on a database that already has it errors out — MySQL has no
--- "ADD COLUMN IF NOT EXISTS" before 8.0, so this is safest done by hand,
--- once.) After that, run `python -m data.fetch_translations` (see that file)
--- to actually fill the new columns in for your existing catalogue.
+);.
