@@ -44,11 +44,27 @@ def fetch_and_save_genres(cursor):
     print(f"Saved {len(genres)} genres.")
 
 
-def fetch_and_save_credits(cursor, movie_id):
+def fetch_and_save_credits(cursor, movie_id, force=False):
     """Fetches the director(s) and top cast members for one movie and saves
     them. Directors and cast members both live in the shared `people` table
     (see schema.sql for why), linked to the movie through movie_directors /
-    movie_cast."""
+    movie_cast.
+
+    A movie's cast/director doesn't change day to day, so — unless `force`
+    is set — this skips the TMDB request entirely for a movie we already
+    have credits for. That check is what keeps the daily "Trending Today"
+    refresh (data/fetch_daily_popular_movies.py) fast: most of a given day's
+    100 trending movies already exist in the main catalogue from the
+    original bulk import, so re-asking TMDB for their credits every single
+    day was pure waste — 100 movies x (a request + a rate-limit pause) x
+    two calls (credits, keywords) adds up fast for no reason. Pass
+    force=True to re-fetch anyway (e.g. if TMDB corrected a credit and you
+    want that one movie refreshed).
+    """
+    if not force:
+        cursor.execute("SELECT 1 FROM movie_cast WHERE movie_id = %s LIMIT 1", (movie_id,))
+        if cursor.fetchone():
+            return
     try:
         url = f"{TMDB_BASE_URL}/movie/{movie_id}/credits"
         params = {"api_key": TMDB_API_KEY}
@@ -101,8 +117,22 @@ def fetch_and_save_credits(cursor, movie_id):
     except Exception as e:
         print(f"Unexpected error while fetching credits for movie {movie_id}: {e}")
 
-def fetch_and_save_keywords(cursor, movie_id):
-
+def fetch_and_save_keywords(cursor, movie_id, force=False):
+    """Fetches a movie's TMDB keyword tags. Same "skip if we already have it"
+    reasoning as fetch_and_save_credits() above — a movie's keywords don't
+    change, so this only actually hits TMDB for a movie we've never
+    processed before. Movies that genuinely have zero keywords on TMDB (it
+    happens, mostly for obscure titles) are the one edge case this doesn't
+    optimize away — with no rows ever appearing in movie_keywords for them,
+    the check below can't tell "genuinely zero keywords" apart from "never
+    checked", so those specific movies get re-asked every time. Harmless,
+    just not free — a small enough slice of the catalogue that it's not
+    worth a separate tracking column for.
+    """
+    if not force:
+        cursor.execute("SELECT 1 FROM movie_keywords WHERE movie_id = %s LIMIT 1", (movie_id,))
+        if cursor.fetchone():
+            return
     try:
         url = f"{TMDB_BASE_URL}/movie/{movie_id}/keywords"
         params = {"api_key": TMDB_API_KEY}
