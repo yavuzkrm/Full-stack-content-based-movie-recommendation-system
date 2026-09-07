@@ -71,17 +71,19 @@
   }
   .header-inner{
     width:100%; max-width: 1180px;
-    display:flex; align-items:center; justify-content:space-between;
+    display:grid; grid-template-columns: 1fr auto 1fr; align-items:center;
     padding: 20px 0;
   }
-  .header-left{ display:flex; align-items:center; gap:28px; }
   .logo{
     display:flex; align-items:center; cursor:pointer;
   }
   .logo img{ height: 72px; width:auto; display:block; }
   .main-nav{
     display:flex; align-items:center; gap:2px; background: var(--surface); border:1px solid var(--line);
-    border-radius: 999px; padding: 4px;
+    border-radius: 999px; padding: 4px; margin-top: 10px;
+    /* Sits in the header's centered grid column (see .header-inner above), so it stays
+       truly centered regardless of how wide the logo or the right-hand controls are —
+       margin-top nudges it down slightly, off dead-center, purely for visual balance. */
   }
   .nav-link{
     display:flex; align-items:center; gap:6px;
@@ -90,7 +92,7 @@
   }
   .nav-link:hover{ color: var(--text); background: var(--surface-2); }
   .nav-link.active{ color:#062420; background: var(--accent); }
-  .header-right{ display:flex; align-items:center; gap:14px; }
+  .header-right{ display:flex; align-items:center; gap:14px; justify-self:end; }
   .lang-toggle{
     display:flex; background: var(--surface-2); border:1px solid var(--line);
     border-radius: 999px; padding:3px; gap:2px;
@@ -662,10 +664,9 @@
   .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
 
   @media (max-width:640px){
-    .header-inner{ padding:16px 0; gap:6px; flex-wrap:wrap; justify-content:center; row-gap:10px; }
-    .header-left{ gap:8px; }
+    .header-inner{ display:flex; padding:16px 0; gap:6px; flex-wrap:wrap; justify-content:center; row-gap:10px; }
     .logo img{ height: 40px; }
-    .main-nav{ padding:3px; gap:0; }
+    .main-nav{ padding:3px; gap:0; margin-top:0; }
     .main-nav .nav-link{ padding: 7px 10px; font-size:14px; }
     .header-right{ gap:8px; }
     .lang-toggle button{ padding: 6px 10px; font-size:12px; }
@@ -683,13 +684,11 @@
 <div class="filmstrip"></div>
 <header>
   <div class="header-inner">
-    <div class="header-left">
-      <div class="logo" id="logo-home"><img src="/static/images/logo.png" alt="NextWatch"></div>
-      <nav class="main-nav">
-        <button class="nav-link" id="nav-top250">🏆 <span class="nav-link-label" data-i18n="nav_top250_label">Top 250</span></button>
-        <button class="nav-link" id="nav-genres">🎭 <span class="nav-link-label" data-i18n="nav_genres_label">Genres</span></button>
-      </nav>
-    </div>
+    <div class="logo" id="logo-home"><img src="/static/images/logo.png" alt="NextWatch"></div>
+    <nav class="main-nav">
+      <button class="nav-link" id="nav-top250">🏆 <span class="nav-link-label" data-i18n="nav_top250_label">Top 250</span></button>
+      <button class="nav-link" id="nav-genres">🎭 <span class="nav-link-label" data-i18n="nav_genres_label">Genres</span></button>
+    </nav>
     <div class="header-right">
       <div class="lang-toggle" id="lang-toggle">
         <button data-lang="en" class="active">EN</button>
