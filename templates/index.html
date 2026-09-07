@@ -1595,6 +1595,25 @@ function openDetail(movie){
     <a class="btn-ext" href="https://www.imdb.com/find?q=${q}" target="_blank" rel="noopener">★ IMDb</a>
     <a class="btn-ext" href="https://letterboxd.com/search/${q}/" target="_blank" rel="noopener">🎞 Letterboxd</a>`;
   document.getElementById("detail-overlay").classList.add("open");
+
+  // Watchlist/favourites/watched/ratings cards and actor/director filmography results all
+  // deliberately carry the LIGHT movie shape (id/title/poster_path/vote_avg — no overview,
+  // genres, directors or cast — see _get_list_with_movie_details() in auth.py and
+  // lists/people_lists.py) so that browsing those lists stays fast. That means a card from
+  // one of those views is missing exactly the fields this detail view needs, which is why
+  // opening one used to show "No overview available." and empty genre/cast rows regardless
+  // of whether the movie actually had any. `overview` is a reliable "is this the light
+  // shape" check: every OTHER endpoint (search, recommend, Top 250, genre pages, /api/movie
+  // itself) always includes it, even as an empty string, so it's only ever literally
+  // undefined on these light objects.
+  if(movie.overview === undefined){
+    apiSafe(`/api/movie/${movie.id}`, {}, null).then(full=>{
+      if(!full) return;
+      if(!detailMovie || detailMovie.id !== movie.id) return; // the user already closed this movie or opened a different one — don't let a late response overwrite what's on screen now
+      Object.assign(movie, full); // fills in overview/title_tr/overview_tr/genres/genres_tr/directors/cast in place
+      openDetail(movie); // re-render now that the object actually has everything — movie.overview is no longer undefined, so this single extra pass can't loop
+    });
+  }
 }
 function renderDetailActions(movie){
   const wrap = document.getElementById("detail-actions");
