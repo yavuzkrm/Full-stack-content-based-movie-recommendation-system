@@ -102,7 +102,7 @@ def load_data():
     directors_df = pd.DataFrame(cursor.fetchall())
 
     cursor.execute("""
-        SELECT mc.movie_id, GROUP_CONCAT(p.name ORDER BY p.name SEPARATOR ', ') AS cast
+        SELECT mc.movie_id, GROUP_CONCAT(p.name ORDER BY mc.cast_order SEPARATOR ', ') AS cast
         FROM movie_cast mc JOIN people p ON mc.person_id = p.id
         GROUP BY mc.movie_id
     """)
