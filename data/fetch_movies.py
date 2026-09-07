@@ -80,8 +80,19 @@ def fetch_and_save_credits(cursor, movie_id):
                 "INSERT IGNORE INTO people (id, name) VALUES (%s, %s)",
                 (person_id, actor["name"])
             )
+            # ON DUPLICATE KEY UPDATE (not INSERT IGNORE) here on purpose: this movie/actor
+            # pair may already exist from before cast_order existed as a column (it would
+            # have been saved as NULL back then) — IGNORE would silently skip re-saving it
+            # forever, so re-running this fetch could never backfill/correct an old NULL
+            # cast_order. UPDATE means simply re-running fetch_movies.py (or the daily
+            # popular-movies refresh, which calls this same function) is enough to fix any
+            # already-stored movie's billing order, no separate one-off migration needed.
             cursor.execute(
-                "INSERT IGNORE INTO movie_cast (movie_id, person_id, character_name, cast_order) VALUES (%s, %s, %s, %s)",
+                """
+                INSERT INTO movie_cast (movie_id, person_id, character_name, cast_order)
+                VALUES (%s, %s, %s, %s)
+                ON DUPLICATE KEY UPDATE character_name = VALUES(character_name), cast_order = VALUES(cast_order)
+                """,
                 (movie_id, person_id, actor.get("character"), actor.get("order"))
             )
 
