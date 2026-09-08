@@ -1300,17 +1300,19 @@ function movieCard(movie){
     };
   });
   div.addEventListener("click", ()=> openDetail(movie));
-  // Kicks off the /api/movie/<id> fetch openDetail() would otherwise only start ON click —
+  // Kicks off the /api/movie/<id> fetch (and the detail poster's own image load — see
+  // prefetchPoster() above) that openDetail() would otherwise only start ON click —
   // hovering a card is a strong "about to click" signal, and the natural pause between
-  // hovering and actually clicking is usually enough for this to finish first, so the detail
-  // view opens with everything already in place instead of visibly filling in a beat later.
-  // { once:true } is enough on its own to stop this refiring on repeated hovers — no separate
-  // "already fetching" check needed here, prefetchMovieDetail() already guards against that.
-  div.addEventListener("mouseenter", ()=> prefetchMovieDetail(movie), { once:true });
+  // hovering and actually clicking is usually enough for both to finish first, so the detail
+  // view opens with everything (data AND poster) already in place instead of visibly
+  // filling in a beat later. { once:true } is enough on its own to stop this refiring on
+  // repeated hovers — no separate "already fetching" check needed here, prefetchMovieDetail()
+  // and prefetchPoster() each already guard against that themselves.
+  div.addEventListener("mouseenter", ()=>{ prefetchMovieDetail(movie); prefetchPoster(movie); }, { once:true });
   // Touch devices never fire mouseenter — touchstart is their closest equivalent "about to
   // tap" signal, firing a beat before the tap's own click event, so it buys the same small
   // head start there too.
-  div.addEventListener("touchstart", ()=> prefetchMovieDetail(movie), { once:true, passive:true });
+  div.addEventListener("touchstart", ()=>{ prefetchMovieDetail(movie); prefetchPoster(movie); }, { once:true, passive:true });
   return div;
 }
 // ── the old project's detailed "vcard" design, carried over into the new theme — used on the results page ──
@@ -1355,6 +1357,13 @@ function recCard(movie, rank){
     };
   });
   div.addEventListener("click", ()=> openDetail(movie));
+  // Same hover/touch prefetch as movieCard() above -- recCard movies almost always
+  // already have full detail data (search/recommend/Top250/genre are all "rich shape"),
+  // so prefetchMovieDetail() here is normally an instant no-op, but prefetchPoster()
+  // still matters: the detail modal shows a different image size than this card does,
+  // so it is never already cached regardless of how rich the data already is.
+  div.addEventListener("mouseenter", ()=>{ prefetchMovieDetail(movie); prefetchPoster(movie); }, { once:true });
+  div.addEventListener("touchstart", ()=>{ prefetchMovieDetail(movie); prefetchPoster(movie); }, { once:true, passive:true });
   return div;
 }
 async function handleCardAction(movie, btn){
@@ -1648,6 +1657,20 @@ function prefetchMovieDetail(movie){
   if(movie.overview !== undefined) return; // already has everything — this is a rich-shape movie, nothing to prefetch
   if(movieDetailCache[movie.id]) return; // already fetching or fetched
   movieDetailCache[movie.id] = apiSafe(`/api/movie/${movie.id}`, {}, null);
+}
+// The detail modal shows the poster at a DIFFERENT TMDB image size (w500, via poster(...,
+// "lg")) than any card does (w300) — meaning the browser can never reuse a card's already-
+// cached thumbnail for the modal, and has to fetch a brand new image every single time a
+// detail view opens, regardless of how recently that same movie's small poster was already
+// on screen. A plain `new Image()` with its src set doesn't render anywhere on its own; the
+// browser just fetches and caches that URL in the background. By the time openDetail()
+// itself sets the real <img>'s src to the same URL, it's very likely already cached — same
+// hover-to-click timing this file already leans on for prefetchMovieDetail() above.
+const _posterPrefetchCache = new Set();
+function prefetchPoster(movie){
+  if(!movie.poster_path || _posterPrefetchCache.has(movie.id)) return;
+  _posterPrefetchCache.add(movie.id);
+  new Image().src = poster(movie.poster_path, "lg");
 }
 function renderDetailActions(movie){
   const wrap = document.getElementById("detail-actions");
@@ -2427,6 +2450,13 @@ function favouriteCard(movie){
     } catch(err){ toast(err.message); }
   };
   div.addEventListener("click", ()=> openDetail(movie));
+  // favouriteCard() was missing this entirely (movieCard()/recCard() already had it) --
+  // that gap is exactly why opening a favourite specifically felt slower than opening
+  // the same movie from anywhere else: no hover/touch prefetch meant every single click
+  // here started BOTH the /api/movie/<id> fetch and the larger detail poster's image
+  // load from a cold start, instead of them very likely already being done by click time.
+  div.addEventListener("mouseenter", ()=>{ prefetchMovieDetail(movie); prefetchPoster(movie); }, { once:true });
+  div.addEventListener("touchstart", ()=>{ prefetchMovieDetail(movie); prefetchPoster(movie); }, { once:true, passive:true });
   return div;
 }
 function favouriteAddTile(){
