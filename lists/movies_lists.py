@@ -50,7 +50,7 @@ def top_250():
     # id as well guarantees the exact same final order every time, regardless of row order.
     top_250_movies = df.sort_values(by=["weighted_rating", "id"], ascending=[False, True]).head(250)
     top_250_movies["bucket"] = top_250_movies["weighted_rating"].round(1)
-    top_250_movies.sort_values(["bucket", "display_rating"], ascending=[False, False])
+    top_250_movies.sort_values(["bucket", "display_rating", "id"], ascending=[False, False, True])
     return top_250_movies[LIST_COLUMNS]
 
 
@@ -71,5 +71,5 @@ def movies_by_genre(genre_name, top_n=30):
     # because anything about the movies themselves actually changed.
     top_genre_movies = genre_movies.sort_values(by=["weighted_rating", "id"], ascending=[False, True]).head(top_n)
     top_genre_movies["bucket"] = top_genre_movies["weighted_rating"].round(1)
-    top_genre_movies.sort_values(["bucket", "display_rating"], ascending=[False, False])
+    top_genre_movies.sort_values(["bucket", "display_rating", "id"], ascending=[False, False, True])
     return top_genre_movies[LIST_COLUMNS]
