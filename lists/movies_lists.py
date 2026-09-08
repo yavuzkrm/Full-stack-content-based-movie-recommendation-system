@@ -59,4 +59,6 @@ def movies_by_genre(genre_name, top_n=1000):
     mask = df["genres"].apply(lambda g: genre_name in [x.strip() for x in g.split(",")])
     genre_movies = df[mask]
     top_genre_movies = genre_movies.sort_values(by="weighted_rating", ascending=False).head(top_n)
+    top_genre_movies["bucket"] = top_250_movies["weighted_rating"].round(1)
+    top_genre_movies.sort_values(["bucket", "display_rating"], ascending=[False, False])
     return top_genre_movies[LIST_COLUMNS]
