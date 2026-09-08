@@ -40,13 +40,21 @@ def top_250():
     calls .astype()/.where() on its input, which only a DataFrame has.
     """
     df, _ = get_data_and_matrix()
-    top_250_movies = df.sort_values(by="weighted_rating", ascending=False).head(250)
+    # A secondary sort key (movie id) matters here, not just for tidiness — MySQL makes no
+    # promise about what order rows come back in when a query has no ORDER BY (see the
+    # `movies` SELECT in engine.py's load_data()), and weighted_rating is rounded to 1
+    # decimal place, so plenty of movies genuinely tie on it. Without a tie-breaker, those
+    # tied movies' relative order depends on whatever incidental order MySQL happened to
+    # return them in THIS TIME — which can (and does) shift after a restart/redeploy, making
+    # the Top 250 order look like it's randomly reshuffling itself for no reason. Sorting by
+    # id as well guarantees the exact same final order every time, regardless of row order.
+    top_250_movies = df.sort_values(by=["weighted_rating", "id"], ascending=[False, True]).head(250)
     top_250_movies["bucket"] = top_250_movies["weighted_rating"].round(1)
     top_250_movies.sort_values(["bucket", "display_rating"], ascending=[False, False])
     return top_250_movies[LIST_COLUMNS]
 
 
-def movies_by_genre(genre_name, top_n=1000):
+def movies_by_genre(genre_name, top_n=30):
     """The top_n highest-rated movies in a single genre (e.g. "Action").
 
     Same DataFrame-not-dict return convention as top_250() above, for the
@@ -58,7 +66,10 @@ def movies_by_genre(genre_name, top_n=1000):
     # against the exact, comma-split list of tags avoids that false-positive.
     mask = df["genres"].apply(lambda g: genre_name in [x.strip() for x in g.split(",")])
     genre_movies = df[mask]
-    top_genre_movies = genre_movies.sort_values(by="weighted_rating", ascending=False).head(top_n)
+    # Same tie-breaker reasoning as top_250() above — without it, this list's order could
+    # shift after every restart purely because of MySQL's unordered row delivery, not
+    # because anything about the movies themselves actually changed.
+    top_genre_movies = genre_movies.sort_values(by=["weighted_rating", "id"], ascending=[False, True]).head(top_n)
     top_genre_movies["bucket"] = top_genre_movies["weighted_rating"].round(1)
     top_genre_movies.sort_values(["bucket", "display_rating"], ascending=[False, False])
     return top_genre_movies[LIST_COLUMNS]
