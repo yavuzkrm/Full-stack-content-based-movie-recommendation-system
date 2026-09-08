@@ -41,6 +41,8 @@ def top_250():
     """
     df, _ = get_data_and_matrix()
     top_250_movies = df.sort_values(by="weighted_rating", ascending=False).head(250)
+    top_250_movies["bucket"] = top_250_movies["weighted_rating"].round(1)
+    top_250_movies.sort_values(["bucket", "display_rating"], ascending=[False, False])
     return top_250_movies[LIST_COLUMNS]
 
 
