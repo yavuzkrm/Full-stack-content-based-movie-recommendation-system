@@ -837,6 +837,7 @@ const UI_TEXT = {
     dd_watchlist: "➕ Watchlist", dd_watched: "✓ Watched", dd_ratings: "★ Your Ratings",
     dd_logout: "→ Log Out", dd_delete_account: "🗑 Delete Account",
     login: "Log in", signup: "Sign up",
+    your_search: "Your search",
     username_ph: "Username", password_ph: "Password",
     no_account: "Don't have an account? ", have_account: "Already have an account? ",
     detail_actions: "Actions", detail_search_elsewhere: "Search Elsewhere",
@@ -934,6 +935,7 @@ const UI_TEXT = {
     nav_top250_label: "İlk 250", nav_genres_label: "Türler", nav_popular_label: "Popüler",
     dd_watchlist: "➕ İzleme Listesi", dd_watched: "✓ İzlenenler", dd_ratings: "★ Puanların",
     dd_logout: "→ Çıkış Yap", dd_delete_account: "🗑 Hesabı Sil",
+    your_search: "Aradığınız",
     login: "Giriş yap", signup: "Kayıt ol",
     username_ph: "Kullanıcı adı", password_ph: "Şifre",
     no_account: "Hesabın yok mu? ", have_account: "Zaten bir hesabın var mı? ",
@@ -2327,7 +2329,7 @@ function renderSearchedHero(movie){
       <div class="rec-score-denom">/ 10</div>
     </div>
     <div class="rec-body">
-      <span class="hero-badge">🎬 Your search</span>
+      <span class="hero-badge">🎬 ${t("your_search")}</span>
       <div class="rec-title">${localizedTitle(movie)}</div>
       ${genres.length ? `<div class="rec-genres">${genres.map(g=>`<span class="genre-tag">${g.trim()}</span>`).join("")}</div>` : ""}
       ${movie.directors ? `<div class="rec-crew"><strong>${t('detail_director')}</strong>${movie.directors}</div>` : ""}
