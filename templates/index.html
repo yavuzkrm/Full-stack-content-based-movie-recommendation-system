@@ -2071,7 +2071,7 @@ function renderAutocomplete(items){
     return `<div class="ac-item" data-idx="${idx}">
       <img src="${poster(item.poster_path)}" onerror="this.style.visibility='hidden'">
       <div>
-        <div class="ac-title">${item.title}</div>
+        <div class="ac-title">${localizedTitle(item)}</div>
         ${item.genres ? `<div class="ac-sub">${String(item.genres).split(",").slice(0,2).join(" · ")}</div>` : ""}
       </div>
       ${rating ? `<div class="ac-score">★ ${Number(rating).toFixed(1)}</div>` : ""}
@@ -2273,7 +2273,7 @@ function renderResultsAutocomplete(items){
     return `<div class="ac-item" data-idx="${idx}">
       <img src="${poster(item.poster_path)}" onerror="this.style.visibility='hidden'">
       <div>
-        <div class="ac-title">${item.title}</div>
+        <div class="ac-title">${localizedTitle(item)}</div>
         ${item.genres ? `<div class="ac-sub">${String(item.genres).split(",").slice(0,2).join(" · ")}</div>` : ""}
       </div>
       ${rating ? `<div class="ac-score">★ ${Number(rating).toFixed(1)}</div>` : ""}
@@ -2472,7 +2472,7 @@ async function fetchSlotSearchResults(){
     return `<div class="ac-item" data-idx="${idx}">
       <img src="${poster(item.poster_path)}" onerror="this.style.visibility='hidden'">
       <div>
-        <div class="ac-title">${item.title}</div>
+        <div class="ac-title">${localizedTitle(item)}</div>
         ${item.genres ? `<div class="ac-sub">${String(item.genres).split(",").slice(0,2).join(" · ")}</div>` : ""}
       </div>
       ${rating ? `<div class="ac-score">★ ${Number(rating).toFixed(1)}</div>` : ""}
