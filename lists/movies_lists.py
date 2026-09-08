@@ -41,7 +41,7 @@ def top_250():
     """
     df, _ = get_data_and_matrix()
     top_250_movies = df.sort_values(by="weighted_rating", ascending=False).head(250)
-    return top_250_movies[LIST_COLUMNS]
+    return top_250_movies[LIST_COLUMNS].sort_values(by="display_rating", ascending=False)
 
 
 def movies_by_genre(genre_name, top_n=1000):
