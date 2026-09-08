@@ -744,7 +744,7 @@
 <div class="overlay" id="rating-overlay">
   <div class="modal rating-modal">
     <div class="rating-close" id="rating-close">✕</div>
-    <h3 id="rating-modal-title">Rate This Movie</h3>
+    <h3 id="rating-modal-title" data-i18n="rating_default_title">Rate This Movie</h3>
     <p class="rating-sub" data-i18n="rating_sub">Click a star to rate it from 1–10.</p>
     <div class="stars-row" id="stars-row"></div>
     <div class="rating-score-lbl" id="rating-score-lbl">No rating selected yet</div>
@@ -1395,7 +1395,7 @@ async function handleCardAction(movie, btn){
 
   try{
     await api(`/api/${action}/${movie.id}`, { method: wasActive ? "DELETE" : "POST" });
-    toast(wasActive ? "Removed." : "Added.");
+    toast(wasActive ? t("toast_removed") : t("toast_added"));
   } catch(err){
     // The request failed (e.g. the favourites list is full) — undo the optimistic change.
     if(wasActive){
@@ -1485,7 +1485,7 @@ function renderStars(){
     star.onclick = ()=>{ ratingSelected = parseInt(star.dataset.val, 10); renderStars(); };
   });
   const lbl = document.getElementById("rating-score-lbl");
-  lbl.textContent = ratingSelected ? `Selected rating: ${ratingSelected} / 10` : "No rating selected yet";
+  lbl.textContent = ratingSelected ? t("rating_selected", ratingSelected) : t("rating_none_selected");
 }
 document.getElementById("rating-close").onclick = ()=> document.getElementById("rating-overlay").classList.remove("open");
 document.getElementById("rating-overlay").onclick = (e)=>{
@@ -1551,7 +1551,7 @@ document.getElementById("delete-account-confirm-btn").onclick = async ()=>{
     document.getElementById("delete-account-overlay").classList.remove("open");
     state.user = null; state.favourites = new Set(); state.favouriteMovies = []; state.watchlist = new Set(); state.watched = new Set(); state.ratings = new Map();
     renderAuth();
-    toast(data.message || "Your account has been deleted.");
+    toast(data.message || t("toast_account_deleted"));
     goToPage("home");
   } catch(err){
     toast(err.message);
@@ -2378,7 +2378,7 @@ function renderPicker(){
         renderPicker();
       };
     } else {
-      slot.innerHTML = `<div class="plus">＋</div><div style="font-size:11px;color:var(--text-dim)">add a movie</div>`;
+      slot.innerHTML = `<div class="plus">＋</div><div style="font-size:11px;color:var(--text-dim)">${t("add_a_movie")}</div>`;
       slot.onclick = ()=> openSlotSearch(i);
     }
     picker.appendChild(slot);
@@ -2430,7 +2430,7 @@ function favouriteCard(movie){
 function favouriteAddTile(){
   const div = document.createElement("div");
   div.className = "card fav-add-tile";
-  const label = state.favouriteMovies.length === 0 ? "Add your first favourite" : "Add a favourite";
+  const label = state.favouriteMovies.length === 0 ? t("add_first_favourite") : t("add_favourite");
   div.innerHTML = `<div class="plus">＋</div><span>${label}</span>`;
   div.onclick = ()=> openSlotSearch(null, "favourites");
   return div;
