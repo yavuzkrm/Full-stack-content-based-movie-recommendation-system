@@ -4,7 +4,7 @@ def get_db():
 
     return cnxpool.get_connection()
 
-def movies_by_cast_member(person_name, top_n=20):
+def movies_by_cast_member(person_name, top_n=50):
     conn = get_db()
     cursor = conn.cursor(dictionary=True)
 
@@ -35,7 +35,7 @@ def movies_by_cast_member(person_name, top_n=20):
         cursor.close()
         conn.close()
 
-def movies_by_director(person_name, top_n=20):
+def movies_by_director(person_name, top_n=50):
     conn = get_db()
     cursor = conn.cursor(dictionary=True)
 
