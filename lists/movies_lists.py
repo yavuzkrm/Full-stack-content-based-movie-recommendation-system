@@ -54,7 +54,7 @@ def top_250():
     return top_250_movies[LIST_COLUMNS]
 
 
-def movies_by_genre(genre_name, top_n=30):
+def movies_by_genre(genre_name, top_n=100):
     """The top_n highest-rated movies in a single genre (e.g. "Action").
 
     Same DataFrame-not-dict return convention as top_250() above, for the
