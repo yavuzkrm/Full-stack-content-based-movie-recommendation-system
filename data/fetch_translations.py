@@ -6,7 +6,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 from config import TMDB_API_KEY, TMDB_BASE_URL, cnxpool
 
 # Run this by hand, once, after adding the title_tr/overview_tr/name_tr
-# columns (see the migration note at the bottom of db/schema.sql):
+# columns (see movies.title_tr / genres.name_tr in db/schema.sql):
 #
 #   python -m data.fetch_translations
 #

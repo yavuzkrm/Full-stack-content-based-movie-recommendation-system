@@ -241,8 +241,8 @@ def get_all_ratings(user_id):
         )
         return cursor.fetchall()
     except Exception as e:
-        print(f"Error fetching rating: {e}")
-        return None
+        print(f"Error fetching ratings: {e}")
+        return []
     finally:
         cursor.close()
         conn.close()

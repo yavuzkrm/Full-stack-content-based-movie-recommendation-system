@@ -26,7 +26,7 @@ def get_db():
 
 
 def fetch_popular_movie():
-    """Pulls today's top 10 trending movies from TMDB and saves them —
+    """Pulls today's top TRENDING_POOL_SIZE trending movies from TMDB and saves them —
     both into the main `movies` table (in case one of them is completely new
     to our catalogue) and into `popular_today`, which is what the homepage's
     "Trending Today" row actually reads from.
@@ -41,7 +41,7 @@ def fetch_popular_movie():
     ONE table the homepage actually reads live from — isn't touched until
     the very end, where it's wiped and refilled in a single short
     transaction. That keeps the window where "Trending Today" could look
-    empty down to a few milliseconds (just a TRUNCATE + 10 INSERTs) instead
+    empty down to a few milliseconds (just a TRUNCATE + a batch of INSERTs) instead
     of however long the whole TMDB fetch takes (which can be many seconds).
     Earlier this function truncated the table up front and only filled it
     back in at the end — during that entire gap, any visitor's homepage
@@ -100,7 +100,7 @@ def fetch_popular_movie():
         fetch_and_save_keywords(cursor, m["id"])
         # Same reasoning as credits/keywords above: this is a no-op (one quick
         # SELECT, no TMDB request) for any movie that's already translated,
-        # so it's safe and cheap to call unconditionally here for all 10 —
+        # so it's safe and cheap to call unconditionally here for every trending movie —
         # whether they're brand new to the catalogue or have been in it for
         # months. This is what keeps "Trending Today" from slowly filling up
         # with untranslated movies over time without anyone having to
@@ -115,7 +115,7 @@ def fetch_popular_movie():
     conn.commit()
 
     # This is the only part visitors' /api/popular requests can actually see,
-    # so it's kept as one short transaction: wipe the old top-10, write the
+    # so it's kept as one short transaction: wipe the old list, write the
     # new one, commit once. TRUNCATE also always causes MySQL/InnoDB to do an
     # implicit commit of its own, so there's no gap between "table empty" and
     # "table refilled" for another connection to catch a request in.

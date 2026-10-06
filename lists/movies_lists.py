@@ -48,9 +48,9 @@ def top_250():
     # return them in THIS TIME — which can (and does) shift after a restart/redeploy, making
     # the Top 250 order look like it's randomly reshuffling itself for no reason. Sorting by
     # id as well guarantees the exact same final order every time, regardless of row order.
-    top_250_movies = df.sort_values(by=["weighted_rating", "id"], ascending=[False, True]).head(250)
+    top_250_movies = df.sort_values(by=["weighted_rating", "id"], ascending=[False, True]).head(250).copy()
     top_250_movies["bucket"] = top_250_movies["weighted_rating"].round(1)
-    top_250_movies.sort_values(["bucket", "display_rating", "id"], ascending=[False, False, True])
+    top_250_movies = top_250_movies.sort_values(["bucket", "display_rating", "id"], ascending=[False, False, True])
     return top_250_movies[LIST_COLUMNS]
 
 
@@ -69,7 +69,7 @@ def movies_by_genre(genre_name, top_n=100):
     # Same tie-breaker reasoning as top_250() above — without it, this list's order could
     # shift after every restart purely because of MySQL's unordered row delivery, not
     # because anything about the movies themselves actually changed.
-    top_genre_movies = genre_movies.sort_values(by=["weighted_rating", "id"], ascending=[False, True]).head(top_n)
+    top_genre_movies = genre_movies.sort_values(by=["weighted_rating", "id"], ascending=[False, True]).head(top_n).copy()
     top_genre_movies["bucket"] = top_genre_movies["weighted_rating"].round(1)
-    top_genre_movies.sort_values(["bucket", "display_rating", "id"], ascending=[False, False, True])
+    top_genre_movies = top_genre_movies.sort_values(["bucket", "display_rating", "id"], ascending=[False, False, True])
     return top_genre_movies[LIST_COLUMNS]

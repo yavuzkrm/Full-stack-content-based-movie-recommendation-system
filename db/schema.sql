@@ -138,12 +138,12 @@ CREATE TABLE IF NOT EXISTS movie_directors (
     FOREIGN KEY (person_id) REFERENCES people(id) ON DELETE CASCADE
 );
 
--- Today's trending movies, refreshed once a day by the background scheduler in
--- main.py. `rank_id` auto-increments in insertion order, which is also TMDB's
+-- Today's trending movies, refreshed once a day by refresh_daily_popular_movies.py
+-- (a separate always-on process — see the Deployment section of the README). `rank_id` auto-increments in insertion order, which is also TMDB's
 -- trending order — that's why data/fetch_daily_popular_movies.py sorts by it
 -- when reading this table back, so the homepage shows movies in the same order
 -- TMDB ranked them.
-CREATE TABLE popular_today (
+CREATE TABLE IF NOT EXISTS popular_today (
     rank_id    INT AUTO_INCREMENT,
     movie_id   INT,
     fetched_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -151,16 +151,18 @@ CREATE TABLE popular_today (
     FOREIGN KEY (movie_id) REFERENCES movies(id) ON DELETE CASCADE
 );
 
-
-CREATE TABLE keywords (
+-- TMDB's keyword tags (e.g. "time travel"), used as the KEYWORDS similarity
+-- signal in recommend/engine.py.
+CREATE TABLE IF NOT EXISTS keywords (
     id   INT PRIMARY KEY,
     name VARCHAR(150) NOT NULL
 );
 
-CREATE TABLE movie_keywords (
+-- Which keywords are attached to which movies.
+CREATE TABLE IF NOT EXISTS movie_keywords (
     movie_id INT,
     keyword_id INT,
     PRIMARY KEY (movie_id, keyword_id),
     FOREIGN KEY (movie_id) REFERENCES movies(id) ON DELETE CASCADE,
     FOREIGN KEY (keyword_id) REFERENCES keywords(id) ON DELETE CASCADE
-);.
+);

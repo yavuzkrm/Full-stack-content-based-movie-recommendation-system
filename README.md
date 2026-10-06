@@ -18,6 +18,7 @@
   <img alt="MySQL" src="https://img.shields.io/badge/MySQL-8.0-4479A1?logo=mysql&logoColor=white">
   <img alt="scikit-learn" src="https://img.shields.io/badge/scikit--learn-TF--IDF-F7931E?logo=scikitlearn&logoColor=white">
   <img alt="Deployed on Railway" src="https://img.shields.io/badge/Deployed%20on-Railway-0B0D0E?logo=railway&logoColor=white">
+  <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-yellow.svg"></a>
 </p>
 
 ---
@@ -33,6 +34,17 @@ outrank a movie 50,000 people actually watched and loved. The same engine
 also powers a Top 250, browse-by-genre pages, and clickable cast/director
 filmographies — and the whole catalogue is bilingual, with search and
 display working in either English or Turkish.
+
+<table>
+  <tr>
+    <td><img src="docs/screenshots/home.png" alt="NextWatch home page"></td>
+    <td><img src="docs/screenshots/recommendations.png" alt="Recommendations for Interstellar"></td>
+  </tr>
+  <tr>
+    <td align="center"><sub>Home — search, single/multi-movie mode, Trending Today</sub></td>
+    <td align="center"><sub>Recommendations for <i>Interstellar</i></sub></td>
+  </tr>
+</table>
 
 ## ✨ Features
 
@@ -117,6 +129,23 @@ these columns:
 | Data source    | [TMDB API](https://www.themoviedb.org/documentation/api) |
 | Deployment     | Railway (web service + a second always-on service for the daily refresh job) |
 
+## 🔌 API overview
+
+The frontend talks to the backend purely through a JSON API (all routes in `main.py`):
+
+| Method | Endpoint | What it does |
+|---|---|---|
+| `GET` | `/api/search?q=` | Search-as-you-type over English + Turkish titles |
+| `GET` | `/api/recommend?title=&top_n=` | Recommendations for one movie |
+| `POST` | `/api/recommend_multi` | Blended recommendations for 2–5 movies (`{"titles": [...]}`) |
+| `GET` | `/api/movie/<id>` | Full details for a single movie |
+| `GET` | `/api/top250` · `/api/genres` · `/api/genre/<name>` | Top 250, genre list, browse by genre |
+| `GET` | `/api/cast/<name>` · `/api/director/<name>` | A person's filmography |
+| `GET` | `/api/popular` · `/api/popular/all` | Trending Today (cached 24h) |
+| `POST` | `/api/register` · `/api/login` · `/api/logout` | Auth — login / register are rate-limited |
+| `GET` | `/api/watchlist` · `/api/watched` · `/api/favourites` · `/api/ratings` | A user's lists and ratings — login required |
+| `POST/DELETE` | `/api/watchlist/<id>` · `/api/watched/<id>` · `/api/favourites/<id>` · `/api/rating/<id>` | Add/remove a movie or rating — login required |
+
 ## 📂 Project structure
 
 ```
@@ -178,6 +207,9 @@ gunicorn main:app --reload
 Open **http://localhost:8000**. The first request warms up the
 recommendation engine (builds the similarity model), which is normal and
 only happens once per process start.
+
+> **On Windows**, gunicorn doesn't run natively — use Flask's dev server
+> instead: `flask --app main run --debug`, then open **http://localhost:5000**.
 
 > Leave `APP_ENV=development` in your local `.env` — it's what tells the app
 > it's fine to send the login cookie over plain `http://localhost` instead of
@@ -247,3 +279,8 @@ fine, it just stops updating "Trending Today", with no visible error.
   10/hour respectively) against brute-forcing and mass account creation. If
   you ever scale this to multiple workers/instances, point flask-limiter's
   `storage_uri` at Redis instead of its default in-memory store.
+
+## 📄 License
+
+Released under the [MIT License](LICENSE). Movie data and images are provided by
+[TMDB](https://www.themoviedb.org/); this product uses the TMDB API but is not endorsed or certified by TMDB.
