@@ -282,5 +282,5 @@ fine, it just stops updating "Trending Today", with no visible error.
 
 ## 📄 License
 
-Released under the [MIT License](LICENSE). Movie data and images are provided by
+This project is licensed under the [MIT License](LICENSE). Movie data and images are provided by
 [TMDB](https://www.themoviedb.org/); this product uses the TMDB API but is not endorsed or certified by TMDB.
