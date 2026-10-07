@@ -230,8 +230,8 @@ only happens once per process start.
 - **`Could not connect to the database` on startup** — MySQL isn't running;
   start it (`mysql.server start` on macOS, `sudo systemctl start mysql` on Linux).
 - **You get logged out immediately after logging in** — set
-  `APP_ENV=development` in `.env` (see the note above the login cookie is
-  otherwise marked HTTPS-only).
+  `APP_ENV=development` in `.env` (see the note above; without it the login
+  cookie is marked HTTPS-only).
 
 </details>
 
