@@ -63,8 +63,8 @@ Top 250, genre pages (`lists/movies_lists.py`) and filmographies (`lists/people_
 
 Each movie can have a Turkish title and overview (`title_tr`, `overview_tr` in `movies`, and `name_tr` in `genres`, see `db/schema.sql`). These are filled by `data/fetch_translations.py`.
 
-- **Search checks both languages** no matter which language is selected. `/api/search` matches the query against `title` or `title_tr`.
-- **The language switch** in the header (`state.lang` in `templates/index.html`) decides which column is shown. If a movie has no translation, the SQL query returns the English one (`COALESCE(title_tr, title)` in `recommend/engine.py`), so the frontend does not need its own fallback.
+- Search checks both languages, whatever language is selected. `/api/search` matches the query against `title` or `title_tr`.
+- The language switch in the header (`state.lang` in `templates/index.html`) decides which column is shown. If a movie has no translation, the SQL query returns the English one (`COALESCE(title_tr, title)` in `recommend/engine.py`), so the frontend does not need its own fallback.
 
 ## Tech stack
 
