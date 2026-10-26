@@ -40,7 +40,7 @@ The recommendations are computed in the app itself, without an external recommen
 - **Top 250 and genre pages**, sorted by the same Bayesian rating used by the recommender instead of the plain average rating.
 - **Clickable cast, directors and genres.** Clicking a name or genre opens a page with that person's movies or that genre.
 - **English/Turkish switch** for titles, overviews and genre names. Movies without a translation are shown in English.
-- **User accounts** with favourites (up to 5), a watchlist, a watched list and 1-10 ratings.
+- **User accounts** with favourites (up to 5), a watchlist, a watched list and 1-10 ratings. Users can delete their account, which also removes all their lists and ratings.
 - **Trending Today** section, updated every day from TMDB's trending list.
 - **Basic security:** rate limits on login/register, secure session cookies, and password rules checked on both frontend and backend.
 
@@ -91,6 +91,8 @@ The frontend uses a JSON API. All routes are in `main.py`.
 | `GET` | `/api/cast/<name>` · `/api/director/<name>` | Filmography of a person |
 | `GET` | `/api/popular` · `/api/popular/all` | Trending Today (cached for 24h) |
 | `POST` | `/api/register` · `/api/login` · `/api/logout` | Authentication (login and register are rate-limited) |
+| `GET` | `/api/me` | Current logged-in user, or `null` |
+| `DELETE` | `/api/delete` | Delete the logged-in user's account (login required) |
 | `GET` | `/api/watchlist` · `/api/watched` · `/api/favourites` · `/api/ratings` | User lists and ratings (login required) |
 | `POST/DELETE` | `/api/watchlist/<id>` · `/api/watched/<id>` · `/api/favourites/<id>` · `/api/rating/<id>` | Add or remove a movie or rating (login required) |
 
