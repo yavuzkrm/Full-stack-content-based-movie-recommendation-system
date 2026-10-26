@@ -102,6 +102,7 @@ The frontend uses a JSON API. All routes are in `main.py`.
 ├── refresh_daily_popular_movies.py # separate process that updates "Trending Today" (see Deployment)
 ├── config.py                       # loads .env, sets up the DB connection pool
 ├── requirements.txt
+├── .env.example                    # template for .env (API key, DB credentials, SECRET_KEY)
 ├── db/
 │   └── schema.sql                  # creates the database and tables
 ├── data/
@@ -116,6 +117,7 @@ The frontend uses a JSON API. All routes are in `main.py`.
 ├── user/
 │   └── auth.py                     # accounts, favourites, watchlist, watched, ratings
 ├── static/images/                  # logo and favicons
+├── docs/screenshots/               # screenshots used in this README
 └── templates/index.html            # the whole frontend (HTML + CSS + JS in one file)
 ```
 
